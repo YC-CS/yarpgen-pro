@@ -1,0 +1,84 @@
+###############################################################################
+#
+# Copyright (c) 2018-2020, Intel Corporation
+# Copyright (c) 2019-2020, University of Utah
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
+
+language: cpp
+
+jobs:
+  include:
+    - stage: check format
+      os: linux
+      dist: focal
+      addons:
+        apt:
+          packages:
+            - clang-format
+      script:
+        - ./check_format.sh clang-format-10
+
+    - stage: build
+    # Ubuntu 16.04, gcc 9
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+
+    # Ubuntu 16.04, clang 8
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-xenial-8
+          packages:
+            - clang-8
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+
+    # Ubuntu 20.04, clang 8
+    - os: linux
+      dist: focal
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-focal-10
+          packages:
+            - clang-10
+      env:
+        - MATRIX_EVAL="CC=clang-10 && CXX=clang++-10"
+
+    # OSX
+    - os: osx
+      osx_image: xcode9.4
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+
+script:
+  - mkdir build; cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release ..
+  - make -j2
+
