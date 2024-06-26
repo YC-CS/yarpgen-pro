@@ -63,7 +63,8 @@ ProgramGenerator::ProgramGenerator() : hash_seed(0) {
 
 void ProgramGenerator::emitCheckFunc(std::ostream &stream) {
     std::ostream &out_file = stream;
-    out_file << "#include <stdio.h>\n\n";
+    out_file << "#include <stdio.h>\n";
+    out_file << "#include <algorithm>\n\n";
 
     Options &options = Options::getInstance();
     if (options.getCheckAlgo() == CheckAlgo::ASSERTS) {
@@ -259,7 +260,7 @@ void ProgramGenerator::emitCheck(std::shared_ptr<EmitCtx> ctx,
             stream << ")";
         stream << ";\n";
     }
-    stream << "}\n";
+    stream << "}\n\n";
 }
 
 // This buffer tracks what input data we pass as a parameters to test functions
@@ -464,24 +465,24 @@ void emitSYCLAccessors(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
 void ProgramGenerator::emitTest(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     Options &options = Options::getInstance();
-    stream << "#include \"init.h\"\n";
-    if (options.isC()) {
-        MinCall::emitCDefinition(ctx, stream);
-        MaxCall::emitCDefinition(ctx, stream);
-    }
-    if (options.isCXX())
-        stream << "#include <algorithm>\n";
-    else if (options.isSYCL()) {
-        stream << "#include <CL/sycl.hpp>\n";
-        stream << "#if defined(FPGA) || defined(FPGA_EMULATOR)\n";
-        stream << "    #include <CL/sycl/intel/fpga_extensions.hpp>\n";
-        stream << "#endif\n";
-    }
-
-    if (options.isISPC()) {
-        ctx->setIspcTypes(true);
-        stream << "export ";
-    }
+//    stream << "#include \"init.h\"\n";
+//    if (options.isC()) {
+//        MinCall::emitCDefinition(ctx, stream);
+//        MaxCall::emitCDefinition(ctx, stream);
+//    }
+//    if (options.isCXX())
+//        stream << "#include <algorithm>\n";
+//    else if (options.isSYCL()) {
+//        stream << "#include <CL/sycl.hpp>\n";
+//        stream << "#if defined(FPGA) || defined(FPGA_EMULATOR)\n";
+//        stream << "    #include <CL/sycl/intel/fpga_extensions.hpp>\n";
+//        stream << "#endif\n";
+//    }
+//
+//    if (options.isISPC()) {
+//        ctx->setIspcTypes(true);
+//        stream << "export ";
+//    }
     stream << "void test(";
 
     bool emit_any = emitVarFuncParam(ctx, stream, ext_inp_sym_tbl->getVars(),
@@ -540,14 +541,14 @@ void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,
     if (options.isISPC())
         stream << "extern \"C\" { ";
 
-    stream << "void test(";
-
-    bool emit_any =
-        emitVarFuncParam(ctx, stream, ext_inp_sym_tbl->getVars(), true, false);
-    emitArrayFuncParam(ctx, stream, emit_any, ext_inp_sym_tbl->getArrays(),
-                       true, false, true);
-
-    stream << ");";
+//    stream << "void test(";
+//
+//    bool emit_any =
+//        emitVarFuncParam(ctx, stream, ext_inp_sym_tbl->getVars(), true, false);
+//    emitArrayFuncParam(ctx, stream, emit_any, ext_inp_sym_tbl->getArrays(),
+//                       true, false, true);
+//
+//    stream << ");";
     if (options.isISPC())
         stream << " }\n";
     stream << "\n\n";
@@ -555,7 +556,7 @@ void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,
     stream << "    init();\n";
     stream << "    test(";
 
-    emit_any =
+    bool emit_any =
         emitVarFuncParam(ctx, stream, ext_inp_sym_tbl->getVars(), false, false);
 
     emitArrayFuncParam(ctx, stream, emit_any, ext_inp_sym_tbl->getArrays(),
@@ -597,9 +598,11 @@ void ProgramGenerator::emit() {
             ERROR(std::string("Can't open file ") + file_name);
     };
 
-    open_file("init.h");
-    emitExtDecl(emit_ctx, out_file);
-    out_file.close();
+//    open_file("init.h");
+    std::ofstream null_stream;
+    emitExtDecl(emit_ctx, null_stream);
+    null_stream.close();
+//    out_file.close();
 
     std::string func_file_ext, driver_file_ext;
     if (options.isC()) {
@@ -614,18 +617,23 @@ void ProgramGenerator::emit() {
         func_file_ext = "ispc";
         driver_file_ext = "cpp";
     }
-    open_file("func." + func_file_ext);
+//    open_file("func." + func_file_ext);
+//    out_file << "/*\n";
+//    options.dump(out_file);
+//    out_file << "*/\n";
+//    emitTest(emit_ctx, out_file);
+//    out_file.close();
+
+    std::string case_name = std::to_string(options.getSeed()) + ".";
+    open_file(case_name + driver_file_ext);
     out_file << "/*\n";
     options.dump(out_file);
     out_file << "*/\n";
-    emitTest(emit_ctx, out_file);
-    out_file.close();
-
-    open_file("driver." + driver_file_ext);
     emitCheckFunc(out_file);
     emitDecl(emit_ctx, out_file);
     emitInit(emit_ctx, out_file);
     emitCheck(emit_ctx, out_file);
+    emitTest(emit_ctx, out_file);
     emitMain(emit_ctx, out_file);
     out_file.close();
 }
