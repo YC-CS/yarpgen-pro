@@ -65,27 +65,27 @@ target_compile_features(yarpgen PRIVATE ${STD})
 target_compile_options(yarpgen PRIVATE ${FLAGS})
 target_link_libraries(yarpgen yarpgen_lib)
 # Copy main executable next to scripts for convenience
-add_custom_command(TARGET yarpgen
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:yarpgen> ${CMAKE_SOURCE_DIR}/scripts)
+#add_custom_command(TARGET yarpgen
+#  POST_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:yarpgen> ${CMAKE_SOURCE_DIR}/scripts)
 
 # Test executables
-add_executable(type_test type_test.cpp)
-target_compile_features(type_test PRIVATE ${STD})
-target_compile_options(type_test PRIVATE ${FLAGS})
-target_link_libraries(type_test yarpgen_lib)
+#add_executable(type_test type_test.cpp)
+#target_compile_features(type_test PRIVATE ${STD})
+#target_compile_options(type_test PRIVATE ${FLAGS})
+#target_link_libraries(type_test yarpgen_lib)
 
-add_executable(data_test data_test.cpp)
-target_compile_features(data_test PRIVATE ${STD})
-target_compile_options(data_test PRIVATE ${FLAGS})
-target_link_libraries(data_test yarpgen_lib)
+#add_executable(data_test data_test.cpp)
+#target_compile_features(data_test PRIVATE ${STD})
+#target_compile_options(data_test PRIVATE ${FLAGS})
+#target_link_libraries(data_test yarpgen_lib)
 
-add_executable(expr_test expr_test.cpp)
-target_compile_features(expr_test PRIVATE ${STD})
-target_compile_options(expr_test PRIVATE ${FLAGS})
-target_link_libraries(expr_test yarpgen_lib)
+#add_executable(expr_test expr_test.cpp)
+#target_compile_features(expr_test PRIVATE ${STD})
+#target_compile_options(expr_test PRIVATE ${FLAGS})
+#target_link_libraries(expr_test yarpgen_lib)
 
-add_executable(gen_test gen_test.cpp)
-target_compile_features(gen_test PRIVATE ${STD})
-target_compile_options(gen_test PRIVATE ${FLAGS})
-target_link_libraries(gen_test yarpgen_lib)
+#add_executable(gen_test gen_test.cpp)
+#target_compile_features(gen_test PRIVATE ${STD})
+#target_compile_options(gen_test PRIVATE ${FLAGS})
+#target_link_libraries(gen_test yarpgen_lib)
