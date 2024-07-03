@@ -65,6 +65,8 @@ IRValue RandValGen::getRandValue(IntTypeID type_id) {
         RandValueCase(IntTypeID::LLONG, getRandValue, TypeSLLong::value_type);
         RandValueCase(IntTypeID::ULLONG, getRandUnsignedValue,
                       TypeULLong::value_type);
+        RandValueCase(IntTypeID::INT_P, getRandValue, TypeIntP::value_type);
+        RandValueCase(IntTypeID::CHAR_P, getRandValue, TypeCharP::value_type);
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Bad IntTypeID");
             break;

@@ -138,6 +138,8 @@ class ScalarVar : public Data {
         return makeVaryingImpl(*this);
     };
 
+    bool is_ptr = false;
+
   private:
     IRValue init_val;
     IRValue cur_val;

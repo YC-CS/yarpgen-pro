@@ -38,6 +38,8 @@ enum class IntTypeID {
     // because their real size depends on the architecture
     LLONG,
     ULLONG,
+    INT_P,
+    CHAR_P,
     MAX_INT_TYPE_ID
 };
 

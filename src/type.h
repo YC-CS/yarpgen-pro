@@ -297,6 +297,32 @@ class TypeULLong : public IntegralTypeHelper<uint64_t> {
     void dbgDump() final;
 };
 
+class TypeIntP : public IntegralTypeHelper<int32_t> {
+    public:
+        TypeIntP(bool _is_static, CVQualifier _cv_qual)
+                : IntegralTypeHelper(getIntTypeId(), _is_static, _cv_qual) {}
+
+        IntTypeID getIntTypeId() final { return IntTypeID::INT_P; }
+        std::string getName(std::shared_ptr<EmitCtx> ctx) final {
+            return getNameImpl(ctx, "int");
+        }
+
+        void dbgDump() final;
+    };
+
+class TypeCharP : public IntegralTypeHelper<int8_t> {
+    public:
+        TypeCharP(bool _is_static, CVQualifier _cv_qual)
+                : IntegralTypeHelper(getIntTypeId(), _is_static, _cv_qual) {}
+
+        IntTypeID getIntTypeId() final { return IntTypeID::CHAR_P; }
+        std::string getName(std::shared_ptr<EmitCtx> ctx) final {
+            return getNameImpl(ctx, "signed char");
+        }
+
+        void dbgDump() final;
+    };
+
 // Base class for all of the array-like types (C-style, Vector, Array,
 // ValArray).
 class ArrayType : public Type {

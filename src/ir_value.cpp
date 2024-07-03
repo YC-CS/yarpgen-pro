@@ -603,6 +603,8 @@ std::ostream &yarpgen::operator<<(std::ostream &out, yarpgen::IRValue &val) {
         OutOperatorCase(IntTypeID::UINT, uint32_t);
         OutOperatorCase(IntTypeID::LLONG, int64_t);
         OutOperatorCase(IntTypeID::ULLONG, uint64_t);
+        OutOperatorCase(IntTypeID::INT_P, int32_t);
+        OutOperatorCase(IntTypeID::CHAR_P, int8_t);
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Bad IntTypeID");
     }
@@ -645,6 +647,14 @@ IRValue::AbsValue IRValue::getAbsValue() {
             break;
         case IntTypeID::ULLONG:
             ret.value = value.ullong_val;
+            break;
+        case IntTypeID::INT_P:
+            ret.isNegative = value.int_p_val < 0;
+            ret.value = value.int_val;
+            break;
+        case IntTypeID::CHAR_P:
+            ret.isNegative = value.char_p_val < 0;
+            ret.value = value.schar_val;
             break;
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Bad IntTypeID");
@@ -690,6 +700,14 @@ void IRValue::setValue(IRValue::AbsValue val) {
             value.ullong_val = static_cast<unsigned long long int>(
                 val.value * (val.isNegative ? -1 : 1));
             break;
+        case IntTypeID::INT_P:
+            value.int_p_val =
+                    static_cast<int>(val.value * (val.isNegative ? -1 : 1));
+            break;
+        case IntTypeID::CHAR_P:
+            value.char_p_val =
+                    static_cast<signed char>(val.value * (val.isNegative ? -1 : 1));
+            break;
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Bad IntTypeID");
             break;
@@ -723,6 +741,8 @@ size_t IRValue::getMSB() {
         GetMSBCase(IntTypeID::UINT, uint32_t);
         GetMSBCase(IntTypeID::LLONG, int64_t);
         GetMSBCase(IntTypeID::ULLONG, uint64_t);
+        GetMSBCase(IntTypeID::INT_P, int32_t);
+        GetMSBCase(IntTypeID::CHAR_P, int8_t);
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Bad IntTypeID");
     }

@@ -84,6 +84,12 @@ std::shared_ptr<IntegralType> IntegralType::init(IntTypeID _type_id,
             ret =
                 std::make_shared<TypeULLong>(TypeULLong(_is_static, _cv_qual));
             break;
+        case IntTypeID::INT_P:
+            ret = std::make_shared<TypeIntP>(TypeIntP(_is_static, _cv_qual));
+            break;
+        case IntTypeID::CHAR_P:
+            ret = std::make_shared<TypeCharP>(TypeCharP(_is_static, _cv_qual));
+            break;
         case IntTypeID::MAX_INT_TYPE_ID:
             ERROR("Unsupported IntTypeID");
     }
@@ -125,6 +131,7 @@ IntTypeID IntegralType::getCorrUnsigned(IntTypeID id) {
     switch (id) {
         case IntTypeID::INT:
         case IntTypeID::UINT:
+        case IntTypeID::INT_P:
             return IntTypeID::UINT;
         case IntTypeID::LLONG:
         case IntTypeID::ULLONG:
@@ -201,6 +208,8 @@ DBG_DUMP_MACROS(TypeSInt)
 DBG_DUMP_MACROS(TypeUInt)
 DBG_DUMP_MACROS(TypeSLLong)
 DBG_DUMP_MACROS(TypeULLong)
+DBG_DUMP_MACROS(TypeIntP)
+DBG_DUMP_MACROS(TypeCharP)
 
 bool ArrayType::isSame(const std::shared_ptr<ArrayType> &lhs,
                        const std::shared_ptr<ArrayType> &rhs) {

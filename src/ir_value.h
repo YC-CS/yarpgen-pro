@@ -43,6 +43,8 @@ class IRValue {
         uint32_t uint_val;
         int64_t llong_val;
         uint64_t ullong_val;
+        int32_t int_p_val;
+        int8_t char_p_val;
     };
 
     struct AbsValue {
@@ -132,6 +134,8 @@ template <> uint64_t &IRValue::getValueRef();
                                 __foo__<TypeSLLong::value_type>)               \
             OperatorWrapperCase(IntTypeID::ULLONG,                             \
                                 __foo__<TypeULLong::value_type>)               \
+            OperatorWrapperCase(IntTypeID::INT_P,  __foo__<TypeIntP::value_type>)\
+            OperatorWrapperCase(IntTypeID::CHAR_P,  __foo__<TypeCharP::value_type>)\
             default: ERROR(std::string("Bad IntTypeID value: ") +              \
                            std::to_string(static_cast<int>(__type_id__)));     \
         }                                                                      \
@@ -241,6 +245,10 @@ template <> uint64_t &IRValue::getValueRef();
                                      TypeSLLong::value_type)                   \
             CastOperatorWrapperCase(IntTypeID::ULLONG, __foo__,                \
                                      TypeULLong::value_type)                   \
+            CastOperatorWrapperCase(IntTypeID::INT_P, __foo__,                 \
+                                     TypeIntP::value_type)                   \
+            CastOperatorWrapperCase(IntTypeID::CHAR_P, __foo__,                 \
+                                     TypeCharP::value_type)                   \
             default: ERROR(std::string("Bad IntTypeID value: ") +              \
                            std::to_string(static_cast<int>(type_id)));         \
         }                                                                      \

@@ -90,6 +90,8 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     for (auto &var : vars) {
         if (!options.getAllowDeadData() && var->getIsDead())
             continue;
+        if (!var->is_ptr)
+            continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
         decl_stmt->emit(ctx, stream);
