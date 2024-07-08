@@ -22,6 +22,7 @@ limitations under the License.
 #include <fstream>
 #include <memory>
 #include <sstream>
+#include <string>
 
 using namespace yarpgen;
 
@@ -90,6 +91,8 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     for (auto &var : vars) {
         if (!options.getAllowDeadData() && var->getIsDead())
             continue;
+        if (var->isPtr())
+            continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
         decl_stmt->emit(ctx, stream);
@@ -119,10 +122,29 @@ static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     }
 }
 
+static void emitNewStmt(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                    std::vector<std::shared_ptr<ScalarVar>> vars) {
+    for (auto &var : vars) {
+        if (var->isPtr()){
+            auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
+            auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
+            stream << var->getType()->getName(ctx) << " ";
+            stream << var->getName(ctx);
+            stream << " = new " << var->getType()->getName(ctx);
+            stream << "(" ;
+            init_val->emit(ctx,stream);
+            stream << ");";
+            stream << "\n";
+        }
+    }
+}
+
 void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     emitVarsDecl(ctx, stream, ext_inp_sym_tbl->getVars());
     emitVarsDecl(ctx, stream, ext_out_sym_tbl->getVars());
+    emitNewStmt(ctx, stream, ext_inp_sym_tbl->getVars());
+    emitNewStmt(ctx, stream, ext_out_sym_tbl->getVars());
 
     emitArrayDecl(ctx, stream, ext_inp_sym_tbl->getArrays());
     emitArrayDecl(ctx, stream, ext_out_sym_tbl->getArrays());
@@ -382,6 +404,13 @@ void ProgramGenerator::emitExtDecl(std::shared_ptr<EmitCtx> ctx,
 
 static std::string placeSep(bool cond) { return cond ? ", " : ""; }
 
+std::string remove_pointer(const std::string& str) {
+    if (!str.empty() && str[0] == '*') {
+        return str.substr(1);
+    }
+    return str;
+}
+
 static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                              std::vector<std::shared_ptr<ScalarVar>> vars,
                              bool emit_type, bool ispc_type) {
@@ -400,6 +429,36 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
         if (emit_type)
             stream << var->getType()->getName(ctx) << " ";
         stream << var->getName(ctx);
+        emit_any = true;
+    }
+    ctx->setSYCLPrefix("");
+    return emit_any;
+}
+
+static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                             std::vector<std::shared_ptr<ScalarVar>> vars,
+                             bool emit_type, bool ispc_type) {
+    bool emit_any = false;
+    Options &options = Options::getInstance();
+    if (options.isSYCL())
+        ctx->setSYCLPrefix("app_");
+    for (auto &var : vars) {
+        if (!options.getAllowDeadData() && var->getIsDead())
+            continue;
+        if (std::find(pass_as_param_buffer.begin(), pass_as_param_buffer.end(),
+                      var->getName(ctx)) == pass_as_param_buffer.end())
+            continue;
+
+        stream << placeSep(emit_any);
+        if (emit_type)
+            stream << var->getType()->getName(ctx) << " ";
+        if(!var->isPtr()){
+            stream << var->getName(ctx);
+        }
+        else{
+            std::string ptr_name = remove_pointer(var->getName(ctx));
+            stream << ptr_name;
+        }
         emit_any = true;
     }
     ctx->setSYCLPrefix("");
@@ -524,6 +583,7 @@ void ProgramGenerator::emitTest(std::shared_ptr<EmitCtx> ctx,
     if (options.isSYCL())
         ctx->setSYCLAccess(true);
     new_test->emit(ctx, stream, !options.isSYCL() ? "" : "            ");
+    stream << "\n";
 
     if (options.isSYCL()) {
         stream << "            );\n";
@@ -533,6 +593,26 @@ void ProgramGenerator::emitTest(std::shared_ptr<EmitCtx> ctx,
     }
     ctx->setSYCLAccess(false);
     ctx->setIspcTypes(false);
+}
+
+static void emitDeleteStmt(std::shared_ptr<EmitCtx> ctx,
+                                std::ostream &stream,std::vector<std::shared_ptr<ScalarVar>> vars) {
+    for (auto &var : vars) {
+        if (!var->isPtr())
+            continue;
+        else{
+            std::string ptr_name = remove_pointer(var->getName(ctx));
+            stream << "    " << "delete " << ptr_name <<";\n";
+        }
+    }
+}
+
+void ProgramGenerator::emitDelete(std::shared_ptr<EmitCtx> ctx,
+                                std::ostream &stream) {
+    stream << "void delete_all_ptr(){\n";
+    emitDeleteStmt(ctx, stream, ext_inp_sym_tbl->getVars());
+    emitDeleteStmt(ctx, stream, ext_out_sym_tbl->getVars());
+    stream << "};";
 }
 
 void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,
@@ -557,13 +637,14 @@ void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,
     stream << "    test(";
 
     bool emit_any =
-        emitVarFuncParam(ctx, stream, ext_inp_sym_tbl->getVars(), false, false);
+        emitVarFuncParamInMain(ctx, stream, ext_inp_sym_tbl->getVars(), false, false);
 
     emitArrayFuncParam(ctx, stream, emit_any, ext_inp_sym_tbl->getArrays(),
                        false, false, false);
 
     stream << ");\n";
     stream << "    checksum();\n";
+    stream << "    delete_all_ptr();\n";
     stream << "    printf(\"%llu\\n\", seed);\n";
     if (options.getCheckAlgo() == CheckAlgo::PRECOMPUTE) {
         stream << "    if (seed != " << hash_seed << "ULL) \n";
@@ -634,6 +715,7 @@ void ProgramGenerator::emit() {
     emitInit(emit_ctx, out_file);
     emitCheck(emit_ctx, out_file);
     emitTest(emit_ctx, out_file);
+    emitDelete(emit_ctx, out_file);
     emitMain(emit_ctx, out_file);
     out_file.close();
 }

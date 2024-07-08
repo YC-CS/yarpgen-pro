@@ -20,6 +20,7 @@ limitations under the License.
 #include "data.h"
 #include "context.h"
 #include "expr.h"
+#include <random>
 
 #include <utility>
 
@@ -34,13 +35,27 @@ void ScalarVar::dbgDump() {
     std::cout << "Is dead: " << is_dead << std::endl;
 }
 
+bool isPointer(){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 10);
+    int randomValue = dis(gen);
+    return (randomValue <= 2);
+}
+
 std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     auto gen_pol = ctx->getGenPolicy();
     IntTypeID type_id = rand_val_gen->getRandId(gen_pol->int_type_distr);
     IRValue init_val = rand_val_gen->getRandValue(type_id);
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
-    return std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
+    bool is_ptr = isPointer();
+    if (!is_ptr){
+        return std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val, is_ptr);
+    }
+    else {
+        return std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val, is_ptr);
+    }
 }
 
 std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {

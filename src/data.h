@@ -113,9 +113,9 @@ class TypedData : public Data {
 class ScalarVar : public Data {
   public:
     ScalarVar(std::string _name, const std::shared_ptr<IntegralType> &_type,
-              IRValue _init_value)
+              IRValue _init_value, bool _is_ptr = false)
         : Data(std::move(_name), _type), init_val(_init_value),
-          cur_val(_init_value) {
+          cur_val(_init_value), is_ptr(_is_ptr){
         ub_code = init_val.getUBCode();
     }
     bool isScalarVar() final { return true; }
@@ -138,9 +138,13 @@ class ScalarVar : public Data {
         return makeVaryingImpl(*this);
     };
 
+    bool isPtr() { return is_ptr; }
+    void setPtr(bool _is_ptr) { is_ptr = _is_ptr; }
+
   private:
     IRValue init_val;
     IRValue cur_val;
+    bool is_ptr;
 };
 
 class Array : public Data {

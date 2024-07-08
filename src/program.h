@@ -34,6 +34,7 @@ class ProgramGenerator {
     void emitCheck(std::shared_ptr<EmitCtx> ctx, std::ostream &stream);
     void emitExtDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream);
     void emitTest(std::shared_ptr<EmitCtx> ctx, std::ostream &stream);
+    void emitDelete(std::shared_ptr<EmitCtx> ctx, std::ostream &stream);
     void emitMain(std::shared_ptr<EmitCtx> ctx, std::ostream &stream);
 
     std::shared_ptr<SymbolTable> ext_inp_sym_tbl;
