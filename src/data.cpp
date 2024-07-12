@@ -35,13 +35,6 @@ void ScalarVar::dbgDump() {
     std::cout << "Is dead: " << is_dead << std::endl;
 }
 
-bool isPointer(){
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(1, 10);
-    int randomValue = dis(gen);
-    return (randomValue <= 2);
-}
 
 std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     auto gen_pol = ctx->getGenPolicy();
@@ -49,7 +42,7 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     IRValue init_val = rand_val_gen->getRandValue(type_id);
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
-    bool is_ptr = isPointer();
+    bool is_ptr = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
     if (!is_ptr){
         return std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val, is_ptr);
     }

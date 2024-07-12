@@ -127,7 +127,6 @@ static void emitNewStmt(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     for (auto &var : vars) {
         if (var->isPtr()){
             auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
-            auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
             stream << var->getType()->getName(ctx) << " ";
             stream << var->getName(ctx);
             stream << " = new " << var->getType()->getName(ctx);

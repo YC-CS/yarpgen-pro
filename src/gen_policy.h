@@ -86,6 +86,9 @@ class GenPolicy {
     // Distribution of available integral types
     std::vector<Probability<IntTypeID>> int_type_distr;
 
+    // Distribution of pointer variables
+    std::vector<Probability<bool>>ptr_type_distr;
+
     // Number of external input variables
     size_t min_inp_vars_num;
     size_t max_inp_vars_num;

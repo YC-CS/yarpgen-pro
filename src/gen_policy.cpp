@@ -85,6 +85,9 @@ GenPolicy::GenPolicy() {
     int_type_distr.emplace_back(Probability<IntTypeID>(IntTypeID::ULLONG, 10));
     shuffleProbProxy(int_type_distr);
 
+    ptr_type_distr.emplace_back(Probability<bool>(true, 20));
+    ptr_type_distr.emplace_back(Probability<bool>(false, 80));
+
     min_inp_vars_num = 10;
     max_inp_vars_num = 20;
 
