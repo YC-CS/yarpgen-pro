@@ -354,7 +354,7 @@ GenPolicy::GenPolicy() {
     stencil_dim_num_distr.emplace_back(4, 10);
     shuffleProbProxy(stencil_dim_num_distr);
 
-    array_dims_num_limit = 7;
+    array_dims_num_limit = 3;
     // It looks like ISPC has trouble allocating arrays that require a lot of
     // memory. We limit the number of dimensions to 4.
     // The issue is that we have to always allocate arrays that contain at

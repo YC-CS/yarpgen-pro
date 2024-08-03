@@ -99,6 +99,18 @@ void DeclStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << ";";
 }
 
+void NewStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                    std::string offset) {
+    stream << offset;
+    stream << data->getType()->getName(ctx) << " ";
+    stream << data->getName(ctx);
+    stream << " = new " << data->getType()->getName(ctx);
+    stream << "(" ;
+    init_expr->emit(ctx,stream);
+    stream << ");";
+    stream << "\n";
+}
+
 void StmtBlock::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                      std::string offset) {
     for (const auto &stmt : stmts) {

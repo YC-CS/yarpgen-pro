@@ -122,18 +122,13 @@ static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     }
 }
 
-static void emitNewStmt(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+static void emitNewDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                     std::vector<std::shared_ptr<ScalarVar>> vars) {
     for (auto &var : vars) {
         if (var->isPtr()){
             auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
-            stream << var->getType()->getName(ctx) << " ";
-            stream << var->getName(ctx);
-            stream << " = new " << var->getType()->getName(ctx);
-            stream << "(" ;
-            init_val->emit(ctx,stream);
-            stream << ");";
-            stream << "\n";
+            auto new_stmt = std::make_shared<NewStmt>(var, init_val);
+            new_stmt->emit(ctx, stream);
         }
     }
 }
@@ -142,8 +137,9 @@ void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     emitVarsDecl(ctx, stream, ext_inp_sym_tbl->getVars());
     emitVarsDecl(ctx, stream, ext_out_sym_tbl->getVars());
-    emitNewStmt(ctx, stream, ext_inp_sym_tbl->getVars());
-    emitNewStmt(ctx, stream, ext_out_sym_tbl->getVars());
+
+    emitNewDecl(ctx, stream, ext_inp_sym_tbl->getVars());
+    emitNewDecl(ctx, stream, ext_out_sym_tbl->getVars());
 
     emitArrayDecl(ctx, stream, ext_inp_sym_tbl->getArrays());
     emitArrayDecl(ctx, stream, ext_out_sym_tbl->getArrays());
