@@ -65,7 +65,8 @@ ProgramGenerator::ProgramGenerator() : hash_seed(0) {
 void ProgramGenerator::emitCheckFunc(std::ostream &stream) {
     std::ostream &out_file = stream;
     out_file << "#include <stdio.h>\n";
-    out_file << "#include <algorithm>\n\n";
+    out_file << "#include <algorithm>\n";
+    out_file << "#include <memory>\n\n";
 
     Options &options = Options::getInstance();
     if (options.getCheckAlgo() == CheckAlgo::ASSERTS) {
@@ -122,13 +123,26 @@ static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     }
 }
 
-static void emitNewDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+// This buffer tracks parameter which use delete()
+std::vector<std::shared_ptr<ScalarVar>> use_delete_param_buffer;
+
+static void emitPtrDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                     std::vector<std::shared_ptr<ScalarVar>> vars) {
     for (auto &var : vars) {
         if (var->isPtr()){
             auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
-            auto new_stmt = std::make_shared<NewStmt>(var, init_val);
-            new_stmt->emit(ctx, stream);
+            if (var->isShared()){
+                auto make_shared_stmt = std::make_shared<MakeSharedStmt>(var, init_val);
+                make_shared_stmt->emit(ctx, stream);
+                stream << "\n";
+
+            }
+            else {
+                auto new_stmt = std::make_shared<NewStmt>(var, init_val);
+                new_stmt->emit(ctx, stream);
+                stream << "\n";
+                use_delete_param_buffer.push_back(var);
+            }
         }
     }
 }
@@ -138,8 +152,8 @@ void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
     emitVarsDecl(ctx, stream, ext_inp_sym_tbl->getVars());
     emitVarsDecl(ctx, stream, ext_out_sym_tbl->getVars());
 
-    emitNewDecl(ctx, stream, ext_inp_sym_tbl->getVars());
-    emitNewDecl(ctx, stream, ext_out_sym_tbl->getVars());
+    emitPtrDecl(ctx, stream, ext_inp_sym_tbl->getVars());
+    emitPtrDecl(ctx, stream, ext_out_sym_tbl->getVars());
 
     emitArrayDecl(ctx, stream, ext_inp_sym_tbl->getArrays());
     emitArrayDecl(ctx, stream, ext_out_sym_tbl->getArrays());
@@ -399,13 +413,6 @@ void ProgramGenerator::emitExtDecl(std::shared_ptr<EmitCtx> ctx,
 
 static std::string placeSep(bool cond) { return cond ? ", " : ""; }
 
-std::string remove_pointer(const std::string& str) {
-    if (!str.empty() && str[0] == '*') {
-        return str.substr(1);
-    }
-    return str;
-}
-
 static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                              std::vector<std::shared_ptr<ScalarVar>> vars,
                              bool emit_type, bool ispc_type) {
@@ -421,9 +428,18 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             continue;
 
         stream << placeSep(emit_any);
-        if (emit_type)
-            stream << var->getType()->getName(ctx) << " ";
-        stream << var->getName(ctx);
+        if (emit_type){
+            if(var->isShared()){
+                stream << "std::shared_ptr<";
+                stream << var->getType()->getName(ctx) << "> ";
+                stream << var->getNameWithoutAsterisk(ctx);
+            }
+            else{
+                stream << var->getType()->getName(ctx) << " ";
+                stream << var->getName(ctx);
+            }
+        }
+
         emit_any = true;
     }
     ctx->setSYCLPrefix("");
@@ -447,12 +463,11 @@ static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &s
         stream << placeSep(emit_any);
         if (emit_type)
             stream << var->getType()->getName(ctx) << " ";
-        if(!var->isPtr()){
-            stream << var->getName(ctx);
+        if(var->isPtr()){
+            stream << var->getNameWithoutAsterisk(ctx);
         }
         else{
-            std::string ptr_name = remove_pointer(var->getName(ctx));
-            stream << ptr_name;
+            stream << var->getName(ctx);
         }
         emit_any = true;
     }
@@ -593,21 +608,17 @@ void ProgramGenerator::emitTest(std::shared_ptr<EmitCtx> ctx,
 static void emitDeleteStmt(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream,std::vector<std::shared_ptr<ScalarVar>> vars) {
     for (auto &var : vars) {
-        if (!var->isPtr())
-            continue;
-        else{
-            std::string ptr_name = remove_pointer(var->getName(ctx));
-            stream << "    " << "delete " << ptr_name <<";\n";
+        stream << "    ";
+        stream << "delete ";
+        stream << var->getNameWithoutAsterisk(ctx) <<";\n";
         }
     }
-}
 
 void ProgramGenerator::emitDelete(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     stream << "void delete_all_ptr(){\n";
-    emitDeleteStmt(ctx, stream, ext_inp_sym_tbl->getVars());
-    emitDeleteStmt(ctx, stream, ext_out_sym_tbl->getVars());
-    stream << "};";
+    emitDeleteStmt(ctx, stream, use_delete_param_buffer);
+    stream << "};\n";
 }
 
 void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,

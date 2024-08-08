@@ -42,12 +42,16 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     IRValue init_val = rand_val_gen->getRandValue(type_id);
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
-    bool is_ptr = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
-    if (!is_ptr){
-        return std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val, is_ptr);
-    }
-    else {
-        return std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val, is_ptr);
+    bool is_ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
+    if(is_ptr_type){
+        bool is_shared_ptr = rand_val_gen->getRandId(gen_pol->shared_ptr_distr);
+        auto new_var = std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val);
+        new_var->setPtr(is_ptr_type);
+        new_var->setShared(is_shared_ptr);
+        return new_var;
+    }else{
+        auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
+        return new_var;
     }
 }
 
@@ -61,6 +65,24 @@ std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {
     ret += Data::getName(ctx);
     if (ctx->useSYCLAccess())
         ret += "[0]";
+    return ret;
+}
+
+std::string Data::getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx){
+    std::string ret;
+    ret += name;
+    if (!ret.empty() && ret[0] == '*') {
+        return ret.substr(1);
+    }
+    return ret;
+}
+
+std::string ScalarVar::getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx){
+    std::string ret;
+    ret += Data::getName(ctx);
+    if (!ret.empty() && ret[0] == '*') {
+        return ret.substr(1);
+    }
     return ret;
 }
 

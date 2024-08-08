@@ -108,7 +108,19 @@ void NewStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << "(" ;
     init_expr->emit(ctx,stream);
     stream << ");";
-    stream << "\n";
+}
+
+void MakeSharedStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                   std::string offset) {
+
+    stream << offset;
+    stream << "std::shared_ptr<";
+    stream << data->getType()->getName(ctx) << "> ";
+    stream << data->getNameWithoutAsterisk(ctx);
+    stream << " = std::make_shared<" << data->getType()->getName(ctx);
+    stream << ">(" ;
+    init_expr->emit(ctx,stream);
+    stream << ");";
 }
 
 void StmtBlock::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,

@@ -42,6 +42,7 @@ class Data {
     virtual ~Data() = default;
 
     virtual std::string getName(std::shared_ptr<EmitCtx> ctx) { return name; }
+    virtual std::string getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx);
     void setName(std::string _name) { name = std::move(_name); }
     std::shared_ptr<Type> getType() { return type; }
 
@@ -113,15 +114,16 @@ class TypedData : public Data {
 class ScalarVar : public Data {
   public:
     ScalarVar(std::string _name, const std::shared_ptr<IntegralType> &_type,
-              IRValue _init_value, bool _is_ptr = false)
+              IRValue _init_value)
         : Data(std::move(_name), _type), init_val(_init_value),
-          cur_val(_init_value), is_ptr(_is_ptr){
+          cur_val(_init_value){
         ub_code = init_val.getUBCode();
     }
     bool isScalarVar() final { return true; }
     DataKind getKind() final { return DataKind::VAR; }
 
     std::string getName(std::shared_ptr<EmitCtx> ctx) override;
+    std::string getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx) override;
 
     IRValue getInitValue() { return init_val; }
     IRValue getCurrentValue() { return cur_val; }
@@ -141,10 +143,14 @@ class ScalarVar : public Data {
     bool isPtr() { return is_ptr; }
     void setPtr(bool _is_ptr) { is_ptr = _is_ptr; }
 
+    bool isShared() { return is_shared; }
+    void setShared(bool _is_shared) { is_shared = _is_shared; }
+
   private:
     IRValue init_val;
     IRValue cur_val;
-    bool is_ptr;
+    bool is_ptr = false;
+    bool is_shared = false;
 };
 
 class Array : public Data {

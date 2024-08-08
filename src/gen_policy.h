@@ -87,7 +87,10 @@ class GenPolicy {
     std::vector<Probability<IntTypeID>> int_type_distr;
 
     // Distribution of pointer variables
-    std::vector<Probability<bool>>ptr_type_distr;
+    std::vector<Probability<bool>> ptr_type_distr;
+
+    // Distribution of shared_ptr in pointers
+    std::vector<Probability<bool>> shared_ptr_distr;
 
     // Number of external input variables
     size_t min_inp_vars_num;

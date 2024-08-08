@@ -87,6 +87,11 @@ GenPolicy::GenPolicy() {
 
     ptr_type_distr.emplace_back(Probability<bool>(true, 20));
     ptr_type_distr.emplace_back(Probability<bool>(false, 80));
+    shuffleProbProxy(ptr_type_distr);
+
+    shared_ptr_distr.emplace_back(Probability<bool>(true, 50));
+    shared_ptr_distr.emplace_back(Probability<bool>(false, 50));
+    shuffleProbProxy(shared_ptr_distr);
 
     min_inp_vars_num = 10;
     max_inp_vars_num = 20;
