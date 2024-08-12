@@ -143,14 +143,14 @@ class ScalarVar : public Data {
     bool isPtr() { return is_ptr; }
     void setPtr(bool _is_ptr) { is_ptr = _is_ptr; }
 
-    bool isShared() { return is_shared; }
-    void setShared(bool _is_shared) { is_shared = _is_shared; }
+    PtrTypeID getPtrType() { return ptr_type; }
+    void setPtrType(PtrTypeID _ptr_type) { ptr_type = _ptr_type; }
 
   private:
     IRValue init_val;
     IRValue cur_val;
     bool is_ptr = false;
-    bool is_shared = false;
+    PtrTypeID ptr_type = PtrTypeID::NONE;
 };
 
 class Array : public Data {

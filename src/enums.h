@@ -41,6 +41,14 @@ enum class IntTypeID {
     MAX_INT_TYPE_ID
 };
 
+
+enum class PtrTypeID {
+    RAW,
+    SHARED,
+    UNIQUE,
+    NONE
+};
+
 enum class CVQualifier {
     NONE,
     CONST,

@@ -42,12 +42,12 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     IRValue init_val = rand_val_gen->getRandValue(type_id);
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
-    bool is_ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
-    if(is_ptr_type){
-        bool is_shared_ptr = rand_val_gen->getRandId(gen_pol->shared_ptr_distr);
+    bool is_ptr = rand_val_gen->getRandId(gen_pol->is_ptr_distr);
+    if(is_ptr){
+        PtrTypeID ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
         auto new_var = std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val);
-        new_var->setPtr(is_ptr_type);
-        new_var->setShared(is_shared_ptr);
+        new_var->setPtr(is_ptr);
+        new_var->setPtrType(ptr_type);
         return new_var;
     }else{
         auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);

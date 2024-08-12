@@ -123,25 +123,41 @@ static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     }
 }
 
-// This buffer tracks parameter which use delete()
-std::vector<std::shared_ptr<ScalarVar>> use_delete_param_buffer;
+// This buffer tracks parameter which need delete()
+std::vector<std::shared_ptr<ScalarVar>> need_delete_param_buffer;
 
 static void emitPtrDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                     std::vector<std::shared_ptr<ScalarVar>> vars) {
     for (auto &var : vars) {
         if (var->isPtr()){
             auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
-            if (var->isShared()){
-                auto make_shared_stmt = std::make_shared<MakeSharedStmt>(var, init_val);
-                make_shared_stmt->emit(ctx, stream);
-                stream << "\n";
-
-            }
-            else {
-                auto new_stmt = std::make_shared<NewStmt>(var, init_val);
-                new_stmt->emit(ctx, stream);
-                stream << "\n";
-                use_delete_param_buffer.push_back(var);
+            PtrTypeID ptr_type = var->getPtrType();
+            switch (ptr_type) {
+                case PtrTypeID::RAW:
+                {
+                    auto new_stmt = std::make_shared<NewStmt>(var, init_val);
+                    new_stmt->emit(ctx, stream);
+                    stream << "\n";
+                    need_delete_param_buffer.push_back(var);
+                    break;
+                }
+                case PtrTypeID::SHARED:
+                {
+                    auto make_shared_stmt = std::make_shared<MakeSharedStmt>(var, init_val);
+                    make_shared_stmt->emit(ctx, stream);
+                    stream << "\n";
+                    break;
+                }
+                case PtrTypeID::UNIQUE:
+                {
+                    auto unique_new_stmt = std::make_shared<UniqueNewStmt>(var, init_val);
+                    unique_new_stmt->emit(ctx, stream);
+                    stream << "\n";
+                    break;
+                }
+                case PtrTypeID::NONE:
+                    break;
+                default:break;
             }
         }
     }
@@ -429,10 +445,14 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
 
         stream << placeSep(emit_any);
         if (emit_type){
-            if(var->isShared()){
+            PtrTypeID ptr_type = var->getPtrType();
+            if( ptr_type == PtrTypeID::SHARED ){
                 stream << "std::shared_ptr<";
                 stream << var->getType()->getName(ctx) << "> ";
-                stream << var->getNameWithoutAsterisk(ctx);
+            }
+            else if( ptr_type == PtrTypeID::UNIQUE ){
+                stream << "std::unique_ptr<";
+                stream << var->getType()->getName(ctx) << "> ";
             }
             else{
                 stream << var->getType()->getName(ctx) << " ";
@@ -616,8 +636,8 @@ static void emitDeleteStmt(std::shared_ptr<EmitCtx> ctx,
 
 void ProgramGenerator::emitDelete(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
-    stream << "void delete_all_ptr(){\n";
-    emitDeleteStmt(ctx, stream, use_delete_param_buffer);
+    stream << "void Release(){\n";
+    emitDeleteStmt(ctx, stream, need_delete_param_buffer);
     stream << "};\n";
 }
 
@@ -650,7 +670,7 @@ void ProgramGenerator::emitMain(std::shared_ptr<EmitCtx> ctx,
 
     stream << ");\n";
     stream << "    checksum();\n";
-    stream << "    delete_all_ptr();\n";
+    stream << "    Release();\n";
     stream << "    printf(\"%llu\\n\", seed);\n";
     if (options.getCheckAlgo() == CheckAlgo::PRECOMPUTE) {
         stream << "    if (seed != " << hash_seed << "ULL) \n";
