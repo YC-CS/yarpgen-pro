@@ -41,6 +41,10 @@ enum class IntTypeID {
     MAX_INT_TYPE_ID
 };
 
+enum class VarKindID {
+    NORMAL,
+    PTR,
+};
 
 enum class PtrTypeID {
     RAW,

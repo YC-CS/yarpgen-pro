@@ -116,7 +116,7 @@ void MakeSharedStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << offset;
     stream << "std::shared_ptr<";
     stream << data->getType()->getName(ctx) << "> ";
-    stream << data->getNameWithoutAsterisk(ctx);
+    stream << data->getNameWithoutPrefix(ctx);
     stream << " = std::make_shared<" << data->getType()->getName(ctx);
     stream << ">(" ;
     init_expr->emit(ctx,stream);
@@ -128,10 +128,11 @@ void UniqueNewStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << offset;
     stream << "std::unique_ptr<";
     stream << data->getType()->getName(ctx) << "> ";
-    stream << data->getNameWithoutAsterisk(ctx);
-    stream << "(new " << data->getType()->getName(ctx) << "(";
+    stream << data->getNameWithoutPrefix(ctx);
+    stream << " = std::make_unique<" << data->getType()->getName(ctx);
+    stream << ">(" ;
     init_expr->emit(ctx,stream);
-    stream << "));";
+    stream << ");";
 }
 
 void StmtBlock::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,

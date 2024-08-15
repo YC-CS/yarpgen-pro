@@ -92,7 +92,7 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     for (auto &var : vars) {
         if (!options.getAllowDeadData() && var->getIsDead())
             continue;
-        if (var->isPtr())
+        if (var->getVarKind() != VarKindID::NORMAL)
             continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
@@ -129,7 +129,7 @@ std::vector<std::shared_ptr<ScalarVar>> need_delete_param_buffer;
 static void emitPtrDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                     std::vector<std::shared_ptr<ScalarVar>> vars) {
     for (auto &var : vars) {
-        if (var->isPtr()){
+        if (var->getVarKind() == VarKindID::PTR){
             auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
             PtrTypeID ptr_type = var->getPtrType();
             switch (ptr_type) {
@@ -449,10 +449,12 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             if( ptr_type == PtrTypeID::SHARED ){
                 stream << "std::shared_ptr<";
                 stream << var->getType()->getName(ctx) << "> ";
+                stream << var->getNameWithoutPrefix(ctx);
             }
             else if( ptr_type == PtrTypeID::UNIQUE ){
                 stream << "std::unique_ptr<";
                 stream << var->getType()->getName(ctx) << "> ";
+                stream << var->getNameWithoutPrefix(ctx);
             }
             else{
                 stream << var->getType()->getName(ctx) << " ";
@@ -483,8 +485,14 @@ static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &s
         stream << placeSep(emit_any);
         if (emit_type)
             stream << var->getType()->getName(ctx) << " ";
-        if(var->isPtr()){
-            stream << var->getNameWithoutAsterisk(ctx);
+        if(var->getVarKind() == VarKindID::PTR){
+            if(var->getPtrType()== PtrTypeID::UNIQUE){
+                stream << "std::move(";
+                stream << var->getNameWithoutPrefix(ctx) << ")";
+            }
+            else{
+                stream << var->getNameWithoutPrefix(ctx);
+            }
         }
         else{
             stream << var->getName(ctx);
@@ -630,11 +638,11 @@ static void emitDeleteStmt(std::shared_ptr<EmitCtx> ctx,
     for (auto &var : vars) {
         stream << "    ";
         stream << "delete ";
-        stream << var->getNameWithoutAsterisk(ctx) <<";\n";
+        stream << var->getNameWithoutPrefix(ctx) <<";\n";
         }
     }
 
-void ProgramGenerator::emitDelete(std::shared_ptr<EmitCtx> ctx,
+void ProgramGenerator::emitRelease(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     stream << "void Release(){\n";
     emitDeleteStmt(ctx, stream, need_delete_param_buffer);
@@ -741,7 +749,7 @@ void ProgramGenerator::emit() {
     emitInit(emit_ctx, out_file);
     emitCheck(emit_ctx, out_file);
     emitTest(emit_ctx, out_file);
-    emitDelete(emit_ctx, out_file);
+    emitRelease(emit_ctx, out_file);
     emitMain(emit_ctx, out_file);
     out_file.close();
 }

@@ -42,16 +42,27 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     IRValue init_val = rand_val_gen->getRandValue(type_id);
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
-    bool is_ptr = rand_val_gen->getRandId(gen_pol->is_ptr_distr);
-    if(is_ptr){
-        PtrTypeID ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
-        auto new_var = std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val);
-        new_var->setPtr(is_ptr);
-        new_var->setPtrType(ptr_type);
-        return new_var;
-    }else{
-        auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
-        return new_var;
+    VarKindID var_kind = rand_val_gen->getRandId(gen_pol->var_kind_distr);
+    switch (var_kind) {
+        case VarKindID::NORMAL:
+        {
+            auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
+            new_var->setVarKind(var_kind);
+            return new_var;
+        }
+        case VarKindID::PTR:
+        {
+            PtrTypeID ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
+            auto new_var = std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val);
+            new_var->setVarKind(var_kind);
+            new_var->setPtrType(ptr_type);
+            return new_var;
+        }
+        default:
+        {
+            auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
+            return new_var;
+        }
     }
 }
 
@@ -68,7 +79,7 @@ std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {
     return ret;
 }
 
-std::string Data::getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx){
+std::string Data::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
     ret += name;
     if (!ret.empty() && ret[0] == '*') {
@@ -77,7 +88,7 @@ std::string Data::getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx){
     return ret;
 }
 
-std::string ScalarVar::getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx){
+std::string ScalarVar::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
     ret += Data::getName(ctx);
     if (!ret.empty() && ret[0] == '*') {

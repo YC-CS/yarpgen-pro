@@ -42,7 +42,7 @@ class Data {
     virtual ~Data() = default;
 
     virtual std::string getName(std::shared_ptr<EmitCtx> ctx) { return name; }
-    virtual std::string getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx);
+    virtual std::string getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx);
     void setName(std::string _name) { name = std::move(_name); }
     std::shared_ptr<Type> getType() { return type; }
 
@@ -123,7 +123,7 @@ class ScalarVar : public Data {
     DataKind getKind() final { return DataKind::VAR; }
 
     std::string getName(std::shared_ptr<EmitCtx> ctx) override;
-    std::string getNameWithoutAsterisk(std::shared_ptr<EmitCtx> ctx) override;
+    std::string getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx) override;
 
     IRValue getInitValue() { return init_val; }
     IRValue getCurrentValue() { return cur_val; }
@@ -140,8 +140,8 @@ class ScalarVar : public Data {
         return makeVaryingImpl(*this);
     };
 
-    bool isPtr() { return is_ptr; }
-    void setPtr(bool _is_ptr) { is_ptr = _is_ptr; }
+    VarKindID getVarKind() { return var_kind; }
+    void setVarKind(VarKindID _var_kind) { var_kind = _var_kind; }
 
     PtrTypeID getPtrType() { return ptr_type; }
     void setPtrType(PtrTypeID _ptr_type) { ptr_type = _ptr_type; }
@@ -149,7 +149,7 @@ class ScalarVar : public Data {
   private:
     IRValue init_val;
     IRValue cur_val;
-    bool is_ptr = false;
+    VarKindID var_kind = VarKindID::NORMAL;
     PtrTypeID ptr_type = PtrTypeID::NONE;
 };
 

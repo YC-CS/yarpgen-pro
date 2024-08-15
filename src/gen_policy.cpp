@@ -85,9 +85,9 @@ GenPolicy::GenPolicy() {
     int_type_distr.emplace_back(Probability<IntTypeID>(IntTypeID::ULLONG, 10));
     shuffleProbProxy(int_type_distr);
 
-    is_ptr_distr.emplace_back(Probability<bool>(true, 30));
-    is_ptr_distr.emplace_back(Probability<bool>(false, 70));
-    shuffleProbProxy(is_ptr_distr);
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::NORMAL, 80));
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::PTR, 20));
+    shuffleProbProxy(var_kind_distr);
 
     ptr_type_distr.emplace_back(Probability<PtrTypeID>(PtrTypeID::RAW, 40));
     ptr_type_distr.emplace_back(Probability<PtrTypeID>(PtrTypeID::SHARED, 20));
