@@ -87,6 +87,8 @@ GenPolicy::GenPolicy() {
 
     var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::NORMAL, 80));
     var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::PTR, 20));
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::STRUCT_MBR, 20));
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::CLASS_MBR, 20));
     shuffleProbProxy(var_kind_distr);
 
     ptr_type_distr.emplace_back(Probability<PtrTypeID>(PtrTypeID::RAW, 40));
@@ -95,7 +97,7 @@ GenPolicy::GenPolicy() {
     shuffleProbProxy(ptr_type_distr);
 
     min_inp_vars_num = 10;
-    max_inp_vars_num = 20;
+    max_inp_vars_num = 30;
 
     expr_stmt_kind_pop_distr.emplace_back(IRNodeKind::ASSIGN, 70);
     expr_stmt_kind_pop_distr.emplace_back(IRNodeKind::REDUCTION, 30);

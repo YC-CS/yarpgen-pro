@@ -44,6 +44,8 @@ enum class IntTypeID {
 enum class VarKindID {
     NORMAL,
     PTR,
+    STRUCT_MBR,
+    CLASS_MBR
 };
 
 enum class PtrTypeID {

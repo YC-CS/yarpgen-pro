@@ -135,6 +135,22 @@ void UniqueNewStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << ");";
 }
 
+void MemberDeclStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                          std::string offset) {
+    stream << offset;
+    stream << data->getType()->getName(ctx) << " ";
+    stream << data->getNameWithoutPrefix(ctx) << ";";
+}
+
+void AssignStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                         std::string offset) {
+    stream << offset;
+    stream << data->getName(ctx);
+    stream << " = ";
+    init_expr->emit(ctx, stream);
+    stream << ";";
+}
+
 void StmtBlock::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                      std::string offset) {
     for (const auto &stmt : stmts) {

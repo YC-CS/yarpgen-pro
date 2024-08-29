@@ -58,6 +58,18 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
             new_var->setPtrType(ptr_type);
             return new_var;
         }
+        case VarKindID::STRUCT_MBR:
+        {
+            auto new_var = std::make_shared<ScalarVar>(nh.getStructMbrName(), int_type, init_val);
+            new_var->setVarKind(var_kind);
+            return new_var;
+        }
+        case VarKindID::CLASS_MBR:
+        {
+            auto new_var = std::make_shared<ScalarVar>(nh.getClassMbrName(), int_type, init_val);
+            new_var->setVarKind(var_kind);
+            return new_var;
+        }
         default:
         {
             auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
@@ -82,8 +94,9 @@ std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {
 std::string Data::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
     ret += name;
-    if (!ret.empty() && ret[0] == '*') {
-        return ret.substr(1);
+    size_t pos = ret.find_last_of("*&.");
+    if (pos != std::string::npos) {
+        return ret.substr(pos + 1);
     }
     return ret;
 }
@@ -91,8 +104,9 @@ std::string Data::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
 std::string ScalarVar::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
     ret += Data::getName(ctx);
-    if (!ret.empty() && ret[0] == '*') {
-        return ret.substr(1);
+    size_t pos = ret.find_last_of("*&.");
+    if (pos != std::string::npos) {
+        return ret.substr(pos + 1);
     }
     return ret;
 }
