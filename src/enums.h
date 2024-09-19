@@ -45,14 +45,22 @@ enum class VarKindID {
     NORMAL,
     PTR,
     STRUCT_MBR,
-    CLASS_MBR
+    CLASS_MBR,
+    MAX_VAR_KIND_ID
 };
 
 enum class PtrTypeID {
     RAW,
     SHARED,
     UNIQUE,
-    NONE
+    MAX_PTR_TYPE_ID
+};
+
+enum class ArrKindID {
+    NORMAL,
+    STRUCT_MBR,
+    CLASS_MBR,
+    MAX_ARR_KIND_ID
 };
 
 enum class CVQualifier {

@@ -96,6 +96,11 @@ GenPolicy::GenPolicy() {
     ptr_type_distr.emplace_back(Probability<PtrTypeID>(PtrTypeID::UNIQUE, 20));
     shuffleProbProxy(ptr_type_distr);
 
+    arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::NORMAL, 40));
+    arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::STRUCT_MBR, 5));
+    arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::CLASS_MBR, 5));
+    shuffleProbProxy(arr_kind_distr);
+
     min_inp_vars_num = 10;
     max_inp_vars_num = 30;
 

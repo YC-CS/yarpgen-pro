@@ -150,7 +150,7 @@ class ScalarVar : public Data {
     IRValue init_val;
     IRValue cur_val;
     VarKindID var_kind = VarKindID::NORMAL;
-    PtrTypeID ptr_type = PtrTypeID::NONE;
+    PtrTypeID ptr_type = PtrTypeID::MAX_PTR_TYPE_ID;
 };
 
 class Array : public Data {
@@ -183,6 +183,9 @@ class Array : public Data {
         return makeVaryingImpl(*this);
     };
 
+    ArrKindID getArrKind() { return arr_kind; }
+    void setArrKind(ArrKindID _arr_kind) { arr_kind = _arr_kind; }
+
   private:
     // TODO:
     // We want elements of the array to have different values.
@@ -201,6 +204,7 @@ class Array : public Data {
     // We use int64_t to use negative values as poison values that
     // indicate that the values are uniform
     int64_t mul_vals_axis_idx;
+    ArrKindID arr_kind = ArrKindID::NORMAL;
 };
 
 class Expr;

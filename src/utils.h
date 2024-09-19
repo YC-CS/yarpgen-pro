@@ -221,11 +221,12 @@ class NameHandler {
     std::string getArrayName() { return "arr_" + std::to_string(arr_idx++); }
     std::string getIterName() { return "i_" + std::to_string(iter_idx++); }
     std::string getPtrName() { return "*ptr_" + std::to_string(ptr_idx++); }
-    std::string getStructMbrName() { return "struct_1.mbr_" + std::to_string(struct_mbr_idx++); }
-    std::string getClassMbrName() { return "object_1.mbr_" + std::to_string(object_mbr_idx++); }
+    std::string getStructMbrName() { return "structure.mbr_" + std::to_string(struct_mbr_idx++); }
+    std::string getClassMbrName() { return "object.mbr_" + std::to_string(object_mbr_idx++); }
 
   private:
-    NameHandler() : var_idx(0), arr_idx(0), iter_idx(0), stub_stmt_idx(0), ptr_idx(0), struct_mbr_idx(0), object_mbr_idx(0) {}
+    NameHandler() : var_idx(0), arr_idx(0), iter_idx(0), stub_stmt_idx(0),
+                    ptr_idx(0), struct_mbr_idx(0), object_mbr_idx(0) {}
 
     uint32_t var_idx;
     uint32_t arr_idx;

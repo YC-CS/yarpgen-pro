@@ -43,39 +43,28 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     auto int_type = IntegralType::init(type_id);
     NameHandler &nh = NameHandler::getInstance();
     VarKindID var_kind = rand_val_gen->getRandId(gen_pol->var_kind_distr);
+    PtrTypeID ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
+    std::string var_name = nh.getVarName();
+    auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
     switch (var_kind) {
         case VarKindID::NORMAL:
-        {
-            auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
-            new_var->setVarKind(var_kind);
-            return new_var;
-        }
+            var_name = nh.getVarName();
+            break;
         case VarKindID::PTR:
-        {
-            PtrTypeID ptr_type = rand_val_gen->getRandId(gen_pol->ptr_type_distr);
-            auto new_var = std::make_shared<ScalarVar>(nh.getPtrName(), int_type, init_val);
-            new_var->setVarKind(var_kind);
+            var_name = nh.getPtrName();
             new_var->setPtrType(ptr_type);
-            return new_var;
-        }
+            break;
         case VarKindID::STRUCT_MBR:
-        {
-            auto new_var = std::make_shared<ScalarVar>(nh.getStructMbrName(), int_type, init_val);
-            new_var->setVarKind(var_kind);
-            return new_var;
-        }
+            var_name = nh.getStructMbrName();
+            break;
         case VarKindID::CLASS_MBR:
-        {
-            auto new_var = std::make_shared<ScalarVar>(nh.getClassMbrName(), int_type, init_val);
-            new_var->setVarKind(var_kind);
-            return new_var;
-        }
-        default:
-        {
-            auto new_var = std::make_shared<ScalarVar>(nh.getVarName(), int_type, init_val);
-            return new_var;
-        }
+            var_name = nh.getClassMbrName();
+            break;
+        default: break;
     }
+    new_var->Data::setName(var_name);
+    new_var->setVarKind(var_kind);
+    return new_var;
 }
 
 std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {
@@ -174,6 +163,7 @@ void Array::setCurrentValue(IRValue _val, bool use_main_vals) {
 
 std::shared_ptr<Array> Array::create(std::shared_ptr<PopulateCtx> ctx,
                                      bool inp) {
+    auto gen_pol = ctx->getGenPolicy();
     auto array_type = ArrayType::create(ctx);
     auto base_type = array_type->getBaseType();
     if (!base_type->isIntType())
@@ -181,8 +171,23 @@ std::shared_ptr<Array> Array::create(std::shared_ptr<PopulateCtx> ctx,
     auto int_type = std::static_pointer_cast<IntegralType>(base_type);
     IRValue init_val = rand_val_gen->getRandValue(int_type->getIntTypeId());
     NameHandler &nh = NameHandler::getInstance();
-    auto new_array =
-        std::make_shared<Array>(nh.getArrayName(), array_type, init_val);
+    ArrKindID arr_kind = rand_val_gen->getRandId(gen_pol->arr_kind_distr);
+    std::string array_name = nh.getArrayName();
+    auto new_array = std::make_shared<Array>(nh.getArrayName(), array_type, init_val);
+    switch (arr_kind) {
+        case ArrKindID::NORMAL:
+            array_name = nh.getArrayName();
+            break;
+        case ArrKindID::STRUCT_MBR:
+            array_name = nh.getStructMbrName();
+            break;
+        case ArrKindID::CLASS_MBR:
+            array_name = nh.getClassMbrName();
+            break;
+        default: break;
+    }
+    new_array->Data::setName(array_name);
+    new_array->setArrKind(arr_kind);
 
     auto mul_vals =
         ctx->getMulValsIter() != nullptr &&
