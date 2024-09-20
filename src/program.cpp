@@ -87,6 +87,7 @@ void ProgramGenerator::emitCheckFunc(std::ostream &stream) {
 // These buffers track parameters which are members of struct or class
 std::vector<std::shared_ptr<ScalarVar>> struct_var_mbr_buffer;
 std::vector<std::shared_ptr<ScalarVar>> class_var_mbr_buffer;
+std::vector<std::shared_ptr<ScalarVar>> class_private_var_mbr_buffer;
 
 static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                          std::vector<std::shared_ptr<ScalarVar>> vars) {
@@ -100,6 +101,8 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             struct_var_mbr_buffer.push_back(var);
         if (var->getVarKind() == VarKindID::CLASS_MBR)
             class_var_mbr_buffer.push_back(var);
+        if (var->getVarKind() == VarKindID::CLASS_PRIVATE_MBR)
+            class_private_var_mbr_buffer.push_back(var);
         if (var->getVarKind() != VarKindID::NORMAL)
             continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
@@ -211,8 +214,8 @@ static void emitStructDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << "}structure;\n";
 }
 
-static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
-                           std::vector<std::shared_ptr<ScalarVar>> vars, std::vector<std::shared_ptr<Array>> arrays) {
+static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream, std::vector<std::shared_ptr<ScalarVar>> vars,
+                            std::vector<std::shared_ptr<Array>> arrays, std::vector<std::shared_ptr<ScalarVar>> private_vars) {
     stream << "class type_2{\n";
     stream << "  public:\n";
 
@@ -240,6 +243,22 @@ static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
         stream << ";\n";
     }
 
+    for (auto &var : private_vars) {
+        stream << "    ";
+        stream << var->getType()->getName(ctx) << "& " << var->getNameWithoutPrefix(ctx);
+        stream << "{ return private_mbr_" << var->getNumberInName(ctx) << "; }\n";
+    }
+
+    stream << "\n  private:\n";
+
+    for (auto &var : private_vars) {
+        stream << "    ";
+        auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
+        auto private_decl_stmt = std::make_shared<PrivateDeclStmt>(var, init_val);
+        private_decl_stmt->emit(ctx,stream);
+        stream << "\n";
+    }
+
     stream << "}object;\n\n";
 }
 
@@ -261,7 +280,7 @@ void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
     emitStructDecl(ctx, stream, struct_var_mbr_buffer, struct_arr_mbr_buffer);
 
     stream << "\n/* -- Classes -- */\n";
-    emitClassDecl(ctx, stream, class_var_mbr_buffer, class_arr_mbr_buffer);
+    emitClassDecl(ctx, stream, class_var_mbr_buffer, class_arr_mbr_buffer, class_private_var_mbr_buffer);
 }
 
 static void emitArrayInit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
@@ -550,7 +569,7 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             continue;
 
         VarKindID var_kind = var->getVarKind();
-        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR)
+        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR)
             continue;
 
         stream << placeSep(emit_any);
@@ -595,7 +614,7 @@ static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &s
             continue;
 
         VarKindID var_kind = var->getVarKind();
-        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR)
+        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR)
             continue;
 
         stream << placeSep(emit_any);

@@ -43,6 +43,7 @@ class Data {
 
     virtual std::string getName(std::shared_ptr<EmitCtx> ctx) { return name; }
     virtual std::string getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx);
+    virtual std::string getNumberInName(std::shared_ptr<EmitCtx> ctx);
     void setName(std::string _name) { name = std::move(_name); }
     std::shared_ptr<Type> getType() { return type; }
 
@@ -123,7 +124,6 @@ class ScalarVar : public Data {
     DataKind getKind() final { return DataKind::VAR; }
 
     std::string getName(std::shared_ptr<EmitCtx> ctx) override;
-    std::string getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx) override;
 
     IRValue getInitValue() { return init_val; }
     IRValue getCurrentValue() { return cur_val; }

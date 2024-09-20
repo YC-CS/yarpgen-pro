@@ -46,6 +46,7 @@ enum class VarKindID {
     PTR,
     STRUCT_MBR,
     CLASS_MBR,
+    CLASS_PRIVATE_MBR,
     MAX_VAR_KIND_ID
 };
 

@@ -60,6 +60,9 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
         case VarKindID::CLASS_MBR:
             var_name = nh.getClassMbrName();
             break;
+        case VarKindID::CLASS_PRIVATE_MBR:
+            var_name = nh.getClassPrivateMbrName();
+            break;
         default: break;
     }
     new_var->Data::setName(var_name);
@@ -90,12 +93,13 @@ std::string Data::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     return ret;
 }
 
-std::string ScalarVar::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
+std::string Data::getNumberInName(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
-    ret += Data::getName(ctx);
-    size_t pos = ret.find_last_of("*&.");
-    if (pos != std::string::npos) {
-        return ret.substr(pos + 1);
+    std::string var_name = Data::getName(ctx);
+    for (char ch : var_name) {
+        if (std::isdigit(ch)) {
+            ret += ch;
+        }
     }
     return ret;
 }

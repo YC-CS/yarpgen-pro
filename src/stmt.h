@@ -97,8 +97,6 @@ private:
     std::shared_ptr<Expr> init_expr;
 };
 
-//
-
 class UniqueNewStmt : public Stmt {
   public:
     explicit UniqueNewStmt(std::shared_ptr<Data> _data) : data(std::move(_data)) {}
@@ -113,7 +111,6 @@ class UniqueNewStmt : public Stmt {
     std::shared_ptr<Expr> init_expr;
 };
 
-//
 class MemberDeclStmt : public Stmt {
 public:
     explicit MemberDeclStmt(std::shared_ptr<Data> _data) : data(std::move(_data)) {}
@@ -127,7 +124,6 @@ private:
     std::shared_ptr<Data> data;
     std::shared_ptr<Expr> init_expr;
 };
-//
 
 class AssignStmt : public Stmt {
 public:
@@ -142,7 +138,20 @@ private:
     std::shared_ptr<Data> data;
     std::shared_ptr<Expr> init_expr;
 };
-//
+
+class PrivateDeclStmt : public Stmt {
+public:
+    explicit PrivateDeclStmt(std::shared_ptr<Data> _data) : data(std::move(_data)) {}
+    PrivateDeclStmt(std::shared_ptr<Data> _data, std::shared_ptr<Expr> _expr)
+            : data(std::move(_data)), init_expr(std::move(_expr)) {}
+    IRNodeKind getKind() final { return IRNodeKind::DECL; }
+    void emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+              std::string offset = "") final;
+
+private:
+    std::shared_ptr<Data> data;
+    std::shared_ptr<Expr> init_expr;
+};
 
 class StmtBlock : public Stmt {
   public:
