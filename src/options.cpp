@@ -156,7 +156,7 @@ std::vector<OptionDescr> yarpgen::OptionParser::options_set{
      "Folder for generated test files (it should exist)",
      "Unreachable Error",
      OptionParser::parseOutDir,
-     ".",
+     "./test.cpp",
      {}},
     {OptionKind::PARAM_SHUFFLE,
      "",

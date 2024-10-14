@@ -842,45 +842,17 @@ void ProgramGenerator::emit() {
         options.setAlignSize(align_size);
     }
 
-    std::ofstream out_file;
-
-    // TODO: probably won't work on Windows
-    std::string out_dir = options.getOutDir() + "/";
-
-    auto open_file = [&out_file, &out_dir](std::string file_name) {
-        out_file.open(out_dir + file_name);
-        if (!out_file)
-            ERROR(std::string("Can't open file ") + file_name);
-    };
-
-//    open_file("init.h");
     std::ofstream null_stream;
     emitExtDecl(emit_ctx, null_stream);
     null_stream.close();
-//    out_file.close();
 
-    std::string func_file_ext, driver_file_ext;
-    if (options.isC()) {
-        func_file_ext = "c";
-        driver_file_ext = "c";
-    }
-    else if (options.isCXX() || options.isSYCL()) {
-        func_file_ext = "cpp";
-        driver_file_ext = "cpp";
-    }
-    else if (options.isISPC()) {
-        func_file_ext = "ispc";
-        driver_file_ext = "cpp";
-    }
-//    open_file("func." + func_file_ext);
-//    out_file << "/*\n";
-//    options.dump(out_file);
-//    out_file << "*/\n";
-//    emitTest(emit_ctx, out_file);
-//    out_file.close();
 
-    std::string case_name = std::to_string(options.getSeed()) + ".";
-    open_file(case_name + driver_file_ext);
+    std::ofstream out_file;
+    // TODO: probably won't work on Windows
+    std::string out_dir = options.getOutDir();
+    out_file.open(out_dir);
+    if (!out_file)
+        ERROR(std::string("Can't open file ") + out_dir);
     out_file << "/*\n";
     options.dump(out_file);
     out_file << "*/\n";
