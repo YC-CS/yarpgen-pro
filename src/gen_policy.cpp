@@ -41,9 +41,9 @@ GenPolicy::GenPolicy() {
     loop_nest_depth_lim = 3;
     uniformProbFromMax(loop_nest_depth_distr, loop_nest_depth_lim, 2);
 
-    loop_depth_limit = 5;
+    loop_depth_limit = 3;
 
-    if_else_depth_limit = 5;
+    if_else_depth_limit = 3;
 
     scope_stmt_min_num = 2;
     scope_stmt_max_num = 5;
@@ -368,13 +368,13 @@ GenPolicy::GenPolicy() {
     stencil_dim_num_distr.emplace_back(4, 10);
     shuffleProbProxy(stencil_dim_num_distr);
 
-    array_dims_num_limit = 3;
+    array_dims_num_limit = 2;
     // It looks like ISPC has trouble allocating arrays that require a lot of
     // memory. We limit the number of dimensions to 4.
     // The issue is that we have to always allocate arrays that contain at
     // least max_ispc_vector size elements. Otherwise, we get a runtime error.
-    if (options.isISPC())
-        array_dims_num_limit = 4;
+//    if (options.isISPC())
+//        array_dims_num_limit = 2;
 
     // Arrays with single dimension require a separate treatment. Otherwise, we
     // do not get the desired distribution.
