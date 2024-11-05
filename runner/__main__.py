@@ -146,7 +146,7 @@ def process_compiler(compilers: list, options: list):
                     write_file(compile_cmd + '\n', cie_file)
 
                     cie_log = LOG_FOLDER + "log-cie-" + compiler + case_file + "-" + opt + '.txt'
-                    process = subprocess.Popen(compile_cmd, cwd=GENERATOR_OUTPUT_FOLDER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    process = subprocess.Popen(compile_cmd, cwd=GENERATOR_OUTPUT_FOLDER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                     output, errors = process.communicate()
                     log_string = "output:" + output + '\n' + "error:" + errors
                     write_file(log_string, cie_log)
@@ -195,7 +195,7 @@ def process_compiler(compilers: list, options: list):
 
                     gdb_cmd = "gdb -q -batch -ex \"run\" -ex \"bt\" ./" + elf_name
                     crash_log = LOG_FOLDER + "log-crash-" + compiler + case_file + "-" + opt + '.txt'
-                    process = subprocess.Popen(gdb_cmd, cwd=GENERATOR_OUTPUT_FOLDER,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,text=True)
+                    process = subprocess.Popen(gdb_cmd, cwd=GENERATOR_OUTPUT_FOLDER,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
                     output, errors = process.communicate()
                     log_string = "output:" + output + '\n' + "error:" + errors
                     write_file(log_string, crash_log)
