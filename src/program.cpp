@@ -738,7 +738,8 @@ static void emitArrayFuncParam(std::shared_ptr<EmitCtx> ctx,
             continue;
 
         ArrKindID arr_kind = array->getArrKind();
-        if (arr_kind == ArrKindID::STRUCT_MBR or arr_kind == ArrKindID::CLASS_MBR)
+        if (arr_kind == ArrKindID::STRUCT_MBR or arr_kind == ArrKindID::CLASS_MBR
+            or arr_kind == ArrKindID::DYN_STRUCT_MBR or arr_kind == ArrKindID::DYN_CLASS_MBR)
             continue;
 
         auto type = array->getType();
