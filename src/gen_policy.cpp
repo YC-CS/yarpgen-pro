@@ -90,6 +90,8 @@ GenPolicy::GenPolicy() {
     var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::STRUCT_MBR, 20));
     var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::CLASS_MBR, 20));
     var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::CLASS_PRIVATE_MBR, 20));
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::DYN_STRUCT_MBR, 20));
+    var_kind_distr.emplace_back(Probability<VarKindID>(VarKindID::DYN_CLASS_MBR, 20));
     shuffleProbProxy(var_kind_distr);
 
     ptr_type_distr.emplace_back(Probability<PtrTypeID>(PtrTypeID::RAW, 40));
@@ -100,6 +102,8 @@ GenPolicy::GenPolicy() {
     arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::NORMAL, 40));
     arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::STRUCT_MBR, 5));
     arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::CLASS_MBR, 5));
+    arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::DYN_STRUCT_MBR, 5));
+    arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::DYN_CLASS_MBR, 5));
     shuffleProbProxy(arr_kind_distr);
 
     min_inp_vars_num = 20;
