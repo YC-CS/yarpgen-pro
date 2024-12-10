@@ -88,6 +88,8 @@ void ProgramGenerator::emitCheckFunc(std::ostream &stream) {
 std::vector<std::shared_ptr<ScalarVar>> struct_var_mbr_buffer;
 std::vector<std::shared_ptr<ScalarVar>> class_var_mbr_buffer;
 std::vector<std::shared_ptr<ScalarVar>> class_private_var_mbr_buffer;
+std::vector<std::shared_ptr<ScalarVar>> dyn_struct_var_mbr_buffer;
+std::vector<std::shared_ptr<ScalarVar>> dyn_class_var_mbr_buffer;
 
 static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                          std::vector<std::shared_ptr<ScalarVar>> vars) {
@@ -103,6 +105,10 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             class_var_mbr_buffer.push_back(var);
         if (var->getVarKind() == VarKindID::CLASS_PRIVATE_MBR)
             class_private_var_mbr_buffer.push_back(var);
+        if (var->getVarKind() == VarKindID::DYN_STRUCT_MBR)
+            dyn_struct_var_mbr_buffer.push_back(var);
+        if (var->getVarKind() == VarKindID::DYN_CLASS_MBR)
+            dyn_class_var_mbr_buffer.push_back(var);
         if (var->getVarKind() != VarKindID::NORMAL)
             continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
@@ -116,6 +122,8 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
 // These buffers track parameters which are members of struct or class
 std::vector<std::shared_ptr<Array>> struct_arr_mbr_buffer;
 std::vector<std::shared_ptr<Array>> class_arr_mbr_buffer;
+std::vector<std::shared_ptr<Array>> dyn_struct_arr_mbr_buffer;
+std::vector<std::shared_ptr<Array>> dyn_class_arr_mbr_buffer;
 
 static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                           std::vector<std::shared_ptr<Array>> arrays) {
@@ -127,6 +135,10 @@ static void emitArrayDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             struct_arr_mbr_buffer.push_back(array);
         if (array->getArrKind() == ArrKindID::CLASS_MBR)
             class_arr_mbr_buffer.push_back(array);
+        if (array->getArrKind() == ArrKindID::DYN_STRUCT_MBR)
+            dyn_struct_arr_mbr_buffer.push_back(array);
+        if (array->getArrKind() == ArrKindID::DYN_CLASS_MBR)
+            dyn_class_arr_mbr_buffer.push_back(array);
         if (array->getArrKind() != ArrKindID::NORMAL)
             continue;
         auto type = array->getType();
@@ -211,12 +223,45 @@ static void emitStructDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
         stream << ";\n";
     }
 
-    stream << "}structure;\n";
+    stream << "}struct_1;\n\n";
+}
+
+static void emitDynamicStructDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                           std::vector<std::shared_ptr<ScalarVar>> vars, std::vector<std::shared_ptr<Array>> arrays) {
+    stream << "struct type_2{\n";
+
+    for (auto &var : vars) {
+        stream << "    ";
+        auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
+        auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        member_decl_stmt->emit(ctx, stream);
+        stream << "\n";
+    }
+
+    for (auto &array : arrays){
+        stream << "    ";
+        auto type = array->getType();
+        assert(type->isArrayType() && "Array should have an Array type");
+        auto array_type = std::static_pointer_cast<ArrayType>(type);
+        stream << array_type->getBaseType()->getName(ctx) << " ";
+        stream << array->getNameWithoutPrefix(ctx) << " ";
+        for (const auto &dimension : array_type->getDimensions()) {
+            stream << "[" << dimension << "] ";
+        }
+        if (array->getAlignment() != 0)
+            stream << "__attribute__((aligned(" << array->getAlignment()
+                   << ")))";
+        stream << ";\n";
+    }
+
+    stream << "};\n\n";
+
+    stream << "type_2* struct_2 = new type_2;\n\n";
 }
 
 static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream, std::vector<std::shared_ptr<ScalarVar>> vars,
                             std::vector<std::shared_ptr<Array>> arrays, std::vector<std::shared_ptr<ScalarVar>> private_vars) {
-    stream << "class type_2{\n";
+    stream << "class type_3{\n";
     stream << "  public:\n";
 
     for (auto &var : vars) {
@@ -259,7 +304,41 @@ static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream, st
         stream << "\n";
     }
 
-    stream << "}object;\n\n";
+    stream << "}object_1;\n\n";
+}
+
+static void emitDynamicClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream, std::vector<std::shared_ptr<ScalarVar>> vars,
+                          std::vector<std::shared_ptr<Array>> arrays) {
+    stream << "class type_4{\n";
+    stream << "  public:\n";
+
+    for (auto &var : vars) {
+        stream << "    ";
+        auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
+        auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        member_decl_stmt->emit(ctx, stream);
+        stream << "\n";
+    }
+
+    for (auto &array : arrays){
+        stream << "    ";
+        auto type = array->getType();
+        assert(type->isArrayType() && "Array should have an Array type");
+        auto array_type = std::static_pointer_cast<ArrayType>(type);
+        stream << array_type->getBaseType()->getName(ctx) << " ";
+        stream << array->getNameWithoutPrefix(ctx) << " ";
+        for (const auto &dimension : array_type->getDimensions()) {
+            stream << "[" << dimension << "] ";
+        }
+        if (array->getAlignment() != 0)
+            stream << "__attribute__((aligned(" << array->getAlignment()
+                   << ")))";
+        stream << ";\n";
+    }
+
+    stream << "};\n\n";
+
+    stream << "type_4* object_2 = new type_4;\n\n";
 }
 
 void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
@@ -278,9 +357,11 @@ void ProgramGenerator::emitDecl(std::shared_ptr<EmitCtx> ctx,
 
     stream << "\n/* -- Structs -- */\n";
     emitStructDecl(ctx, stream, struct_var_mbr_buffer, struct_arr_mbr_buffer);
+    emitDynamicStructDecl(ctx, stream, dyn_struct_var_mbr_buffer, dyn_struct_arr_mbr_buffer);
 
     stream << "\n/* -- Classes -- */\n";
     emitClassDecl(ctx, stream, class_var_mbr_buffer, class_arr_mbr_buffer, class_private_var_mbr_buffer);
+    emitDynamicClassDecl(ctx, stream, dyn_class_var_mbr_buffer, dyn_class_arr_mbr_buffer);
 }
 
 static void emitArrayInit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
@@ -343,8 +424,10 @@ void ProgramGenerator::emitInit(std::shared_ptr<EmitCtx> ctx,
     emitArrayInit(ctx, stream, ext_out_sym_tbl->getArrays());
     stream << "\n/* -- Structs -- */\n";
     emitVarMemberInit(ctx, stream, struct_var_mbr_buffer);
+    emitVarMemberInit(ctx, stream, dyn_struct_var_mbr_buffer);
     stream << "\n/* -- Classes -- */\n";
     emitVarMemberInit(ctx, stream, class_var_mbr_buffer);
+    emitVarMemberInit(ctx, stream, dyn_class_var_mbr_buffer);
     stream << "}\n\n";
 }
 
@@ -569,7 +652,8 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             continue;
 
         VarKindID var_kind = var->getVarKind();
-        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR)
+        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR
+            or var_kind == VarKindID::DYN_STRUCT_MBR or var_kind == VarKindID::DYN_CLASS_MBR)
             continue;
 
         stream << placeSep(emit_any);
@@ -594,7 +678,7 @@ static bool emitVarFuncParam(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
         emit_any = true;
     }
 
-    stream << ", type_1 structure, type_2 object";
+    stream << ", type_1 struct_1, type_2* struct_2, type_3 object_1, type_4* object_2 ";
     ctx->setSYCLPrefix("");
     return emit_any;
 }
@@ -614,7 +698,8 @@ static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &s
             continue;
 
         VarKindID var_kind = var->getVarKind();
-        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR)
+        if (var_kind == VarKindID::STRUCT_MBR or var_kind == VarKindID::CLASS_MBR or var_kind == VarKindID::CLASS_PRIVATE_MBR
+            or var_kind == VarKindID::DYN_STRUCT_MBR or var_kind == VarKindID::DYN_CLASS_MBR)
             continue;
 
         stream << placeSep(emit_any);
@@ -634,7 +719,7 @@ static bool emitVarFuncParamInMain(std::shared_ptr<EmitCtx> ctx, std::ostream &s
         }
         emit_any = true;
     }
-    stream << ", structure, object";
+    stream << ", struct_1, struct_2, object_1, object_2";
     ctx->setSYCLPrefix("");
     return emit_any;
 }
@@ -653,7 +738,8 @@ static void emitArrayFuncParam(std::shared_ptr<EmitCtx> ctx,
             continue;
 
         ArrKindID arr_kind = array->getArrKind();
-        if (arr_kind == ArrKindID::STRUCT_MBR or arr_kind == ArrKindID::CLASS_MBR)
+        if (arr_kind == ArrKindID::STRUCT_MBR or arr_kind == ArrKindID::CLASS_MBR
+            or arr_kind == ArrKindID::DYN_STRUCT_MBR or arr_kind == ArrKindID::DYN_CLASS_MBR)
             continue;
 
         auto type = array->getType();
@@ -786,6 +872,8 @@ void ProgramGenerator::emitRelease(std::shared_ptr<EmitCtx> ctx,
                                 std::ostream &stream) {
     stream << "void Release(){\n";
     emitDeleteStmt(ctx, stream, need_delete_param_buffer);
+    stream << "    delete struct_2;\n";
+    stream << "    delete object_2;\n";
     stream << "};\n";
 }
 

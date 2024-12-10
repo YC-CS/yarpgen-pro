@@ -47,6 +47,8 @@ enum class VarKindID {
     STRUCT_MBR,
     CLASS_MBR,
     CLASS_PRIVATE_MBR,
+    DYN_STRUCT_MBR,
+    DYN_CLASS_MBR,
     MAX_VAR_KIND_ID
 };
 
@@ -61,6 +63,8 @@ enum class ArrKindID {
     NORMAL,
     STRUCT_MBR,
     CLASS_MBR,
+    DYN_STRUCT_MBR,
+    DYN_CLASS_MBR,
     MAX_ARR_KIND_ID
 };
 

@@ -63,6 +63,12 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
         case VarKindID::CLASS_PRIVATE_MBR:
             var_name = nh.getClassPrivateMbrName();
             break;
+        case VarKindID::DYN_STRUCT_MBR:
+            var_name = nh.getDynamicStructMbrName();
+            break;
+        case VarKindID::DYN_CLASS_MBR:
+            var_name = nh.getDynamicClassMbrName();
+            break;
         default: break;
     }
     new_var->Data::setName(var_name);
@@ -86,7 +92,7 @@ std::string ScalarVar::getName(std::shared_ptr<EmitCtx> ctx) {
 std::string Data::getNameWithoutPrefix(std::shared_ptr<EmitCtx> ctx){
     std::string ret;
     ret += name;
-    size_t pos = ret.find_last_of("*&.");
+    size_t pos = ret.find_last_of("*&.->");
     if (pos != std::string::npos) {
         return ret.substr(pos + 1);
     }
@@ -187,6 +193,12 @@ std::shared_ptr<Array> Array::create(std::shared_ptr<PopulateCtx> ctx,
             break;
         case ArrKindID::CLASS_MBR:
             array_name = nh.getClassMbrName();
+            break;
+        case ArrKindID::DYN_STRUCT_MBR:
+            array_name = nh.getDynamicStructMbrName();
+            break;
+        case ArrKindID::DYN_CLASS_MBR:
+            array_name = nh.getDynamicClassMbrName();
             break;
         default: break;
     }
