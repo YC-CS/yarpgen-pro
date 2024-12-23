@@ -139,6 +139,20 @@ private:
     std::shared_ptr<Expr> init_expr;
 };
 
+class ConstructorAssignStmt : public Stmt {
+  public:
+    explicit ConstructorAssignStmt(std::shared_ptr<Data> _data) : data(std::move(_data)) {}
+    ConstructorAssignStmt(std::shared_ptr<Data> _data, std::shared_ptr<Expr> _expr)
+        : data(std::move(_data)), init_expr(std::move(_expr)) {}
+    IRNodeKind getKind() final { return IRNodeKind::DECL; }
+    void emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+              std::string offset = "") final;
+
+  private:
+    std::shared_ptr<Data> data;
+    std::shared_ptr<Expr> init_expr;
+};
+
 class PrivateDeclStmt : public Stmt {
 public:
     explicit PrivateDeclStmt(std::shared_ptr<Data> _data) : data(std::move(_data)) {}

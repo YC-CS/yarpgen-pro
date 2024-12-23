@@ -151,6 +151,15 @@ void AssignStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
     stream << ";";
 }
 
+void ConstructorAssignStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
+                                 std::string offset) {
+    stream << offset;
+    stream << data->getNameWithoutPrefix(ctx);
+    stream << " = ";
+    init_expr->emit(ctx, stream);
+    stream << ";";
+}
+
 void PrivateDeclStmt::emit(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
                            std::string offset) {
     stream << offset;

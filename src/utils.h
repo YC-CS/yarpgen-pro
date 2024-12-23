@@ -222,14 +222,14 @@ class NameHandler {
     std::string getIterName() { return "i_" + std::to_string(iter_idx++); }
     std::string getPtrName() { return "*ptr_" + std::to_string(ptr_idx++); }
     std::string getStructMbrName() { return "struct_1.mbr_" + std::to_string(struct_mbr_idx++); }
+    std::string getDynamicStructMbrName() { return "struct_2->mbr_" + std::to_string(dyn_struct_mbr_idx++); }
     std::string getClassMbrName() { return "object_1.mbr_" + std::to_string(class_mbr_idx++); }
     std::string getClassPrivateMbrName() { return "object_1.func" + std::to_string(class_private_mbr_idx++) + "()"; }
-    std::string getDynamicStructMbrName() { return "struct_2->mbr_" + std::to_string(dyn_struct_mbr_idx++); }
     std::string getDynamicClassMbrName() { return "object_2->mbr_" + std::to_string(dyn_class_mbr_idx++); }
 
   private:
-    NameHandler() : var_idx(0), arr_idx(0), iter_idx(0), stub_stmt_idx(0), ptr_idx(0), struct_mbr_idx(0),
-                    class_mbr_idx(0), class_private_mbr_idx(0), dyn_struct_mbr_idx(0), dyn_class_mbr_idx(0) {}
+    NameHandler() : var_idx(0), arr_idx(0), iter_idx(0), stub_stmt_idx(0), ptr_idx(0), struct_mbr_idx(0), dyn_struct_mbr_idx(0),
+                    class_mbr_idx(0), class_private_mbr_idx(0), dyn_class_mbr_idx(0) {}
 
     uint32_t var_idx;
     uint32_t arr_idx;
@@ -237,9 +237,9 @@ class NameHandler {
     uint32_t stub_stmt_idx;
     uint32_t ptr_idx;
     uint32_t struct_mbr_idx;
+    uint32_t dyn_struct_mbr_idx;
     uint32_t class_mbr_idx;
     uint32_t class_private_mbr_idx;
-    uint32_t dyn_struct_mbr_idx;
     uint32_t dyn_class_mbr_idx;
 };
 } // namespace yarpgen
