@@ -25,8 +25,3 @@ class State(Enum):
     EXECUTION_SUCC = 4
     EXECUTION_TIMEOUT = 5
     EXECUTION_CRASH = 6
-
-
-class Language(int):
-    c = 1
-    cpp = 2

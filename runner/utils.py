@@ -3,6 +3,7 @@ import tempfile
 import traceback
 import time
 import datetime
+import os
 
 
 def run_cmd(command: list, working_dir: str, timeout: int = 5):
@@ -66,8 +67,8 @@ def dict_compare(d1: dict, d2: dict):
 
 
 
-def case_name_to_elf_name(compiler: str, case_file: str, opt: str):
-    return 'ELF-' + compiler.upper() + '-' + case_file + '--' + opt
+def case_name_to_elf_name(compiler: str, case_file: str, opt: str, march = ""):
+    return 'ELF-' + compiler.upper() + '-' + case_file + '-' + opt + march
 
 
 def insert_to_dict(key: str, mapping: dict, new_value):
@@ -78,3 +79,8 @@ def insert_to_dict(key: str, mapping: dict, new_value):
 def filename_sort_key(filename):
     serial_number = filename.split('--')[-1].split('.')[0]
     return int(serial_number)
+
+def delete_files_with_substring(directory, substring):
+    for filename in os.listdir(directory):
+        if substring in filename and os.path.isfile(os.path.join(directory, filename)):
+            os.remove(os.path.join(directory, filename))

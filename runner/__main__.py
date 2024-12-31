@@ -1,24 +1,29 @@
-import os
 import shutil
 import zipfile
+import yaml
+import argparse
 
 from utils import *
 from StateEnum import State
 from StateEnum import state_to_str
-from StateEnum import Language
 
+# 用于设置仅编译的选项
+parser = argparse.ArgumentParser(description="compiler only")
+parser.add_argument("--compile-only", action="store_true", help="only compile, won't execute")
+args = parser.parse_args()
+
+# 读取 YAML 配置文件
+with open('config.yml', 'r') as file:
+    config = yaml.safe_load(file)
 
 # 语言设置
-language = Language.cpp
+language = config.get('language')
 
 # 代码生成器的可执行文件路径
-GENERATOR_ELF = '/home/workspace/yarpgen-pro/build/yarpgen'
+GENERATOR_ELF = config.get('generator')
 
 # 测试文件夹路径
-TEST_PATH = '/home/workspace/Testing/'
-
-# 库的路径
-LIB_PATH = '/home/workspace/CompilerTestingRunner/lib/'
+TEST_PATH = config.get('testing')
 
 TIME_STR = get_current_time_str()
 TEST_FOLDER = TEST_PATH + 'Testing-' + TIME_STR + '/'
@@ -50,10 +55,12 @@ def generator_runner(test_num: int = 1):
     if not os.path.exists(GENERATOR_OUTPUT_FOLDER):
         raise ValueError('You should have a legal generator output root')
 
-    if language == Language.c:
+    if language == "c":
         file_ext = '.c'
-    else:
+    elif language == "cpp":
         file_ext = '.cpp'
+    else :
+        raise ValueError('You should choose a supported language')
 
     for i in range(test_num):
         output_file = GENERATOR_OUTPUT_FOLDER + TIME_STR + '--' + str(i+1) + file_ext
@@ -103,7 +110,7 @@ def backup_file(case_name: str):
         shutil.copyfile(GENERATOR_OUTPUT_FOLDER + case_name, BACKUP_FOLDER + case_name)
 
 
-def process_compiler(compilers: list, options: list):
+def process_compiler(compilers: list, optimization: list, marches: list, extra_options: list):
     global GENERATOR_OUTPUT_FOLDER , LOG_FOLDER
 
     # for each test case
@@ -130,79 +137,117 @@ def process_compiler(compilers: list, options: list):
         er_file = LOG_FOLDER + 'LOG-' + tail  # execution_res
 
         for compiler in compilers:
-            for opt in options:
-                elf_name = case_name_to_elf_name(compiler, case_file, opt)
-                compile_cmd = compiler + ' -I ' + LIB_PATH + ' -' + opt + " " + case_file + ' -o ' + elf_name
-
-                compile_state = compile_elf(compile_cmd)
-
-                if compile_state == State.COMPILE_TIMEOUT:
-                    write_file(compile_cmd + '\n', ct_file)
-                    insert_to_dict(case_file, compilation_timeout_files, elf_name)
-                    #backup_file(case_file)
-                    continue
-                elif compile_state == State.COMPILE_CRASH:
-                    insert_to_dict(case_file, compiler_internal_error, elf_name)
-                    write_file(compile_cmd + '\n', cie_file)
-
-                    cie_log = LOG_FOLDER + "log-cie-" + compiler + case_file + "-" + opt + '.txt'
-                    process = subprocess.Popen(compile_cmd, cwd=GENERATOR_OUTPUT_FOLDER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-                    output, errors = process.communicate()
-                    log_string = "output:" + output + '\n' + "error:" + errors
-                    write_file(log_string, cie_log)
-
-                    backup_file(case_file)
-                    continue
-
-                execute_state, ret_val = execute_elf(elf_name)
-                # record all
-                write_file(compile_cmd + ' -> ' + ret_val + '\n', er_file)
-                # process state
-                if execute_state == State.EXECUTION_SUCC:
-                    if case_file not in execution_res:
-                        execution_res[case_file] = []
-                    elf_and_checksum = (elf_name, ret_val)
-                    # compare with timeout historical results
-                    if case_file in execution_timeout_files:
-                        print("{} OPT ERROR {} AT {}, "
-                              "both timeout and checksum are generated!".format(compiler, case_file, opt))
-                        insert_to_dict(case_file, compiler_opt_error, elf_name)
-                        write_file(compile_cmd + ' -> ' + ret_val + '\n', coe_file)
+            for opt in optimization:
+                if not args.compile_only:
+                    elf_name = case_name_to_elf_name(compiler, case_file, opt)
+                    compile_strings = []
+                    compile_strings.append(compiler)
+                    compile_strings.append(opt)
+                    compile_strings.extend(extra_options)
+                    compile_strings.append(case_file)
+                    compile_strings.append("-o")
+                    compile_strings.append(elf_name)
+                    compile_cmd = " ".join(compile_strings)
+                    compile_state = compile_elf(compile_cmd)
+                    if compile_state == State.COMPILE_TIMEOUT:
+                        write_file(compile_cmd + '\n', ct_file)
+                        insert_to_dict(case_file, compilation_timeout_files, elf_name)
                         #backup_file(case_file)
-                    # compare with historical results
-                    for (k, v) in execution_res[case_file]:
-                        if ret_val != v:
-                            print("{} OPT ERROR {} AT {}!".format(compiler, case_file, opt))
+                        continue
+                    elif compile_state == State.COMPILE_CRASH:
+                        insert_to_dict(case_file, compiler_internal_error, elf_name)
+                        write_file(compile_cmd + '\n', cie_file)
+                        cie_log = LOG_FOLDER + "log-cie-" + compiler + case_file + opt + '.txt'
+                        process = subprocess.Popen(compile_cmd, cwd=GENERATOR_OUTPUT_FOLDER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                        output, errors = process.communicate()
+                        log_string = "OUTPUT:" + output + '\n' + "ERROR:" + errors
+                        write_file(log_string, cie_log)
+                        backup_file(case_file)
+                        continue
+
+                    execute_state, ret_val = execute_elf(elf_name)
+                    # record all
+                    write_file(compile_cmd + ' -> ' + ret_val + '\n', er_file)
+                    # process state
+                    if execute_state == State.EXECUTION_SUCC:
+                        if case_file not in execution_res:
+                            execution_res[case_file] = []
+                        elf_and_checksum = (elf_name, ret_val)
+                        # compare with timeout historical results
+                        if case_file in execution_timeout_files:
+                            print("{} OPT ERROR {} AT {}, "
+                                  "both timeout and checksum are generated!".format(compiler, case_file, opt))
                             insert_to_dict(case_file, compiler_opt_error, elf_name)
                             write_file(compile_cmd + ' -> ' + ret_val + '\n', coe_file)
-                            backup_file(case_file)
-                    execution_res[case_file].append(elf_and_checksum)
-                    checksum_array.append(ret_val)
+                            #backup_file(case_file)
+                        # compare with historical results
+                        for (k, v) in execution_res[case_file]:
+                            if ret_val != v:
+                                print("{} OPT ERROR {} AT {}!".format(compiler, case_file, opt))
+                                insert_to_dict(case_file, compiler_opt_error, elf_name)
+                                write_file(compile_cmd + ' -> ' + ret_val + '\n', coe_file)
+                                backup_file(case_file)
+                        execution_res[case_file].append(elf_and_checksum)
+                        checksum_array.append(ret_val)
 
-                elif execute_state == State.EXECUTION_TIMEOUT:
-                    insert_to_dict(case_file, execution_timeout_files, elf_name)
-                    write_file(compile_cmd + '\n', et_file)
-                    # compare with timeout historical results
-                    if case_file in execution_res:
-                        print("{} OPT ERROR {} AT {}, "
-                              "both timeout and checksum are generated!".format(compiler, case_file, opt))
+                    elif execute_state == State.EXECUTION_TIMEOUT:
+                        insert_to_dict(case_file, execution_timeout_files, elf_name)
+                        write_file(compile_cmd + '\n', et_file)
+                        # compare with timeout historical results
+                        if case_file in execution_res:
+                            print("{} OPT ERROR {} AT {}, "
+                                  "both timeout and checksum are generated!".format(compiler, case_file, opt))
+                            insert_to_dict(case_file, compiler_opt_error, elf_name)
+                            write_file(compile_cmd + ' -> EXECUTION_TIMEOUT\n', coe_file)
+                            #backup_file(case_file)
+                    elif execute_state == State.EXECUTION_CRASH:
                         insert_to_dict(case_file, compiler_opt_error, elf_name)
-                        write_file(compile_cmd + ' -> EXECUTION_TIMEOUT\n', coe_file)
-                        #backup_file(case_file)
-                elif execute_state == State.EXECUTION_CRASH:
-                    insert_to_dict(case_file, compiler_opt_error, elf_name)
-                    write_file(compile_cmd + ' -> EXECUTION_CRASH\n', coe_file)
+                        write_file(compile_cmd + ' -> EXECUTION_CRASH\n', coe_file)
+                        gdb_cmd = "gdb -q -batch -ex \"run\" -ex \"bt\" ./" + elf_name
+                        crash_log = LOG_FOLDER + "log-crash-" + compiler + case_file + '.txt'
+                        process = subprocess.Popen(gdb_cmd, cwd=GENERATOR_OUTPUT_FOLDER,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
+                        output, errors = process.communicate()
+                        log_string = "OUTPUT:" + output + '\n' + "ERROR:" + errors
+                        write_file(log_string, crash_log)
+                        backup_file(case_file)
 
-                    gdb_cmd = "gdb -q -batch -ex \"run\" -ex \"bt\" ./" + elf_name
-                    crash_log = LOG_FOLDER + "log-crash-" + compiler + case_file + "-" + opt + '.txt'
-                    process = subprocess.Popen(gdb_cmd, cwd=GENERATOR_OUTPUT_FOLDER,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
-                    output, errors = process.communicate()
-                    log_string = "output:" + output + '\n' + "error:" + errors
-                    write_file(log_string, crash_log)
+                else:
+                    for march in marches:
+                        elf_name = case_name_to_elf_name(compiler, case_file, opt, march)
+                        compile_strings = []
+                        compile_strings.append(compiler)
+                        compile_strings.append(opt)
+                        compile_strings.extend(extra_options)
+                        compile_strings.append(march)
+                        compile_strings.append(case_file)
+                        compile_strings.append("-o")
+                        compile_strings.append(elf_name)
+                        compile_cmd = " ".join(compile_strings)
 
-                    backup_file(case_file)
+                        compile_state = compile_elf(compile_cmd)
+                        if compile_state == State.COMPILE_TIMEOUT:
+                            write_file(compile_cmd + '\n', ct_file)
+                            insert_to_dict(case_file, compilation_timeout_files, elf_name)
+                            # backup_file(case_file)
+                            continue
+                        elif compile_state == State.COMPILE_CRASH:
+                            insert_to_dict(case_file, compiler_internal_error, elf_name)
+                            write_file(compile_cmd + '\n', cie_file)
+                            cie_log = LOG_FOLDER + "log-cie-" + compiler + case_file + opt + march + '.txt'
+                            process = subprocess.Popen(compile_cmd, cwd=GENERATOR_OUTPUT_FOLDER, shell=True,
+                                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                       universal_newlines=True)
+                            output, errors = process.communicate()
+                            log_string = "OUTPUT:" + output + '\n' + "ERROR:" + errors
+                            write_file(log_string, cie_log)
+                            backup_file(case_file)
+                            continue
+
+        delete_files_with_substring(GENERATOR_OUTPUT_FOLDER, "ELF")
+
+        if args.compile_only:
+            continue
         # compare all checksum
-
         print("comparing checksum from:{}\n".format(case_file))
             # if the checksums are not all same
         if len(checksum_array) != 0:
@@ -215,27 +260,19 @@ def process_compiler(compilers: list, options: list):
 
 
 def compile_and_execute():
-    if language == Language.c:
+
+    if language == "c":
         compilers = ['clang', 'gcc']
-    elif language == Language.cpp:
+    elif language == "cpp":
         compilers = ['clang++', 'g++']
     else :
         raise ValueError('You should choose a supported language')
 
-    options = []
-    for level in range(0, 4):
-        options.append('O' + str(level))
-    process_compiler(compilers, options)
+    process_compiler(compilers, config.get('optimization'), config.get('march'), config.get('extra_option'))
 
 
-def move_and_compress():
+def compress():
     global GENERATOR_OUTPUT_FOLDER , TEST_FOLDER , BACKUP_FOLDER , LOG_FOLDER
-
-    for ELF_file in os.listdir(GENERATOR_OUTPUT_FOLDER):
-        ELF_path = GENERATOR_OUTPUT_FOLDER + ELF_file
-        if 'ELF' in ELF_file :
-            os.remove(ELF_path)
-            continue
 
     zip_name = TEST_PATH + 'Testing-' + TIME_STR + ".zip"
     zip = zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED)
@@ -253,5 +290,5 @@ def move_and_compress():
 if __name__ == '__main__':
     generator_runner(100)
     compile_and_execute()
-    move_and_compress()
+    compress()
 
