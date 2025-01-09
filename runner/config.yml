@@ -1,6 +1,12 @@
 language : "cpp"
-generator : "/home/workspace/yarpgen-pro/build/yarpgen"
-testing : "/home/workspace/Testing/"
+generator_path : "/home/workspace/yarpgen-pro/build/yarpgen"
+testing_path : "/home/workspace/Testing/"
+timeout : 30
+run_count : 100
+
+compiler :
+  - "g++"
+  - "clang++"
 
 optimization :
   - "-O0"
@@ -11,8 +17,7 @@ optimization :
   - "-Ofast"
 
 extra_option :
-  - "-fsanitize=undefined"
-
+  - "-std=c++14"
 
 march:
   - "-march=alderlake"

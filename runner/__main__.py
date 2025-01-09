@@ -7,23 +7,26 @@ from utils import *
 from StateEnum import State
 from StateEnum import state_to_str
 
+parser = argparse.ArgumentParser()
+
 # 用于设置仅编译的选项
-parser = argparse.ArgumentParser(description="compiler only")
 parser.add_argument("--compile-only", action="store_true", help="only compile, won't execute")
+
+# 传入 YAML 路径
+parser.add_argument('yaml_file', type=str, help='Path to the YAML file')
+
 args = parser.parse_args()
 
-# 读取 YAML 配置文件
-with open('config.yml', 'r') as file:
+# 读取 YAML 配置
+with open(args.yaml_file, 'r') as file:
     config = yaml.safe_load(file)
 
-# 语言设置
 language = config.get('language')
+GENERATOR_ELF = config.get('generator_path')
+TEST_PATH = config.get('testing_path')
+timeout = config.get('timeout')
+run_count = config.get('run_count')
 
-# 代码生成器的可执行文件路径
-GENERATOR_ELF = config.get('generator')
-
-# 测试文件夹路径
-TEST_PATH = config.get('testing')
 
 TIME_STR = get_current_time_str()
 TEST_FOLDER = TEST_PATH + 'Testing-' + TIME_STR + '/'
@@ -69,11 +72,11 @@ def generator_runner(test_num: int = 1):
         os.system(cmd)
 
 def compile_elf(compile_cmd: str):
-    global GENERATOR_OUTPUT_FOLDER
+    global GENERATOR_OUTPUT_FOLDER, timeout
 
     try:
         print("COMPILE: " + compile_cmd)
-        ret, _, _ = run_cmd(compile_cmd.split(' '), GENERATOR_OUTPUT_FOLDER, 30)
+        ret, _, _ = run_cmd(compile_cmd.split(' '), GENERATOR_OUTPUT_FOLDER, timeout)
     except subprocess.TimeoutExpired:
         print("COMPILER TIMEOUT: {}".format(compile_cmd))
         return State.COMPILE_TIMEOUT
@@ -86,11 +89,11 @@ def compile_elf(compile_cmd: str):
 
 
 def execute_elf(elf_name: str):
-    global GENERATOR_OUTPUT_FOLDER
+    global GENERATOR_OUTPUT_FOLDER, timeout
     try:
         exe_cmd = './' + elf_name
         print("RUN TEST: " + exe_cmd)
-        ret, stdout, stderr = run_cmd([exe_cmd], GENERATOR_OUTPUT_FOLDER, 30)
+        ret, stdout, stderr = run_cmd([exe_cmd], GENERATOR_OUTPUT_FOLDER, timeout)
     except subprocess.TimeoutExpired:
         print("GENERATED DEAD-LOOP FILE: {}".format(elf_name))
         return State.EXECUTION_TIMEOUT, state_to_str(State.EXECUTION_TIMEOUT)
@@ -260,15 +263,12 @@ def process_compiler(compilers: list, optimization: list, marches: list, extra_o
 
 
 def compile_and_execute():
+    compilers = config.get('compiler')
+    optimizations = config.get('optimization')
+    marches = config.get('march')
+    extra_options = config.get('extra_option')
 
-    if language == "c":
-        compilers = ['clang', 'gcc']
-    elif language == "cpp":
-        compilers = ['clang++', 'g++']
-    else :
-        raise ValueError('You should choose a supported language')
-
-    process_compiler(compilers, config.get('optimization'), config.get('march'), config.get('extra_option'))
+    process_compiler(compilers, optimizations, marches, extra_options)
 
 
 def compress():
@@ -288,7 +288,7 @@ def compress():
 
 
 if __name__ == '__main__':
-    generator_runner(100)
+    generator_runner(run_count)
     compile_and_execute()
     compress()
 
