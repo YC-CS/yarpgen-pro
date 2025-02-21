@@ -1,0 +1,31 @@
+language : "cpp"
+generator_path : "/home/yc/workspace/projects/yarpgen-pro/build/yarpgen"
+testing_path : "/home/yc/workspace/Testing/"
+timeout : 30
+run_count : 10000
+
+compiler :
+  - "g++"
+  - "clang++"
+
+optimization :
+  - "-O0"
+  - "-O1"
+  - "-Os"
+  - "-O2"
+  - "-O3"
+  - "-Ofast"
+
+extra_option :
+  - "-c"
+
+march:
+  - "-march=skylake-avx512"
+  - "-march=broadwell"
+  - "-march=nehalem"
+  - "-march=westmere"
+  - "-march=knl"  
+  - "-march=ivybridge"
+  - "-march=haswell"
+  - "-march=core-avx2"
+  - "-march=sapphirerapids"
