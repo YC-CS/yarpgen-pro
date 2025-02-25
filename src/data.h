@@ -146,11 +146,15 @@ class ScalarVar : public Data {
     PtrTypeID getPtrType() { return ptr_type; }
     void setPtrType(PtrTypeID _ptr_type) { ptr_type = _ptr_type; }
 
+    DeclModID getDeclMod() { return decl_mod; }
+    void setDeclMod(DeclModID _decl_mod) { decl_mod = _decl_mod; }
+
   private:
     IRValue init_val;
     IRValue cur_val;
     VarKindID var_kind = VarKindID::NORMAL;
     PtrTypeID ptr_type = PtrTypeID::MAX_PTR_TYPE_ID;
+    DeclModID decl_mod = DeclModID::NORMAL;
 };
 
 class Array : public Data {

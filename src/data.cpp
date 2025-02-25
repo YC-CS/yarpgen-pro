@@ -73,6 +73,10 @@ std::shared_ptr<ScalarVar> ScalarVar::create(std::shared_ptr<PopulateCtx> ctx) {
     }
     new_var->Data::setName(var_name);
     new_var->setVarKind(var_kind);
+
+    DeclModID decl_mod = rand_val_gen->getRandId(gen_pol->decl_mod_distr);
+    new_var->setDeclMod(decl_mod);
+
     return new_var;
 }
 

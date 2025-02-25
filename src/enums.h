@@ -68,6 +68,19 @@ enum class ArrKindID {
     MAX_ARR_KIND_ID
 };
 
+enum class DeclModID {
+    NORMAL,
+//    VOLATILE,
+    STATIC,
+    THREAD_LOCAL,
+    ALIGNAS_8,
+    ALIGNAS_16,
+    CONST,
+    CONSTEXPR,
+    MUTABLE,
+    MAX_DEL_MOD_ID
+};
+
 enum class CVQualifier {
     NONE,
     CONST,

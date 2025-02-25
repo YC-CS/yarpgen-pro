@@ -95,6 +95,9 @@ class GenPolicy {
     // Distribution of array kinds
     std::vector<Probability<ArrKindID>> arr_kind_distr;
 
+    // Distribution of declare modifier kinds
+    std::vector<Probability<DeclModID>> decl_mod_distr;
+
     // Number of external input variables
     size_t min_inp_vars_num;
     size_t max_inp_vars_num;

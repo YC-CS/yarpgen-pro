@@ -113,6 +113,32 @@ static void emitVarsDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
             continue;
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto decl_stmt = std::make_shared<DeclStmt>(var, init_val);
+
+        switch (var->getDeclMod()) {
+//            case DeclModID::VOLATILE:
+//                stream << "volatile ";
+//                break;
+            case DeclModID::STATIC:
+                stream << "static ";
+                break;
+            case DeclModID::THREAD_LOCAL:
+                stream << "thread_local ";
+                break;
+            case DeclModID::ALIGNAS_8:
+                stream << "alignas(8) ";
+                break;
+            case DeclModID::ALIGNAS_16:
+                stream << "alignas(16) ";
+                break;
+            case DeclModID::CONST:
+                stream << "const ";
+                break;
+            case DeclModID::CONSTEXPR:
+                stream << "constexpr ";
+                break;
+            default: break;
+        }
+
         decl_stmt->emit(ctx, stream);
         stream << "\n";
     }
@@ -203,6 +229,18 @@ static void emitStructDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream,
         stream << "    ";
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        switch (var->getDeclMod()) {
+            case DeclModID::ALIGNAS_8:
+                stream << "alignas(8) ";
+                break;
+            case DeclModID::ALIGNAS_16:
+                stream << "alignas(16) ";
+                break;
+            case DeclModID::MUTABLE:
+                stream << "mutable ";
+                break;
+            default: break;
+        }
         member_decl_stmt->emit(ctx, stream);
         stream << "\n";
     }
@@ -234,6 +272,18 @@ static void emitDynamicStructDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &st
         stream << "    ";
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        switch (var->getDeclMod()) {
+            case DeclModID::ALIGNAS_8:
+                stream << "alignas(8) ";
+                break;
+            case DeclModID::ALIGNAS_16:
+                stream << "alignas(16) ";
+                break;
+            case DeclModID::MUTABLE:
+                stream << "mutable ";
+                break;
+            default: break;
+        }
         member_decl_stmt->emit(ctx, stream);
         stream << "\n";
     }
@@ -268,6 +318,18 @@ static void emitClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &stream, st
         stream << "    ";
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        switch (var->getDeclMod()) {
+            case DeclModID::ALIGNAS_8:
+                stream << "alignas(8) ";
+                break;
+            case DeclModID::ALIGNAS_16:
+                stream << "alignas(16) ";
+                break;
+            case DeclModID::MUTABLE:
+                stream << "mutable ";
+                break;
+            default: break;
+        }
         member_decl_stmt->emit(ctx, stream);
         stream << "\n";
     }
@@ -316,6 +378,18 @@ static void emitDynamicClassDecl(std::shared_ptr<EmitCtx> ctx, std::ostream &str
         stream << "    ";
         auto init_val = std::make_shared<ConstantExpr>(var->getInitValue());
         auto member_decl_stmt = std::make_shared<MemberDeclStmt>(var, init_val);
+        switch (var->getDeclMod()) {
+            case DeclModID::ALIGNAS_8:
+                stream << "alignas(8) ";
+                break;
+            case DeclModID::ALIGNAS_16:
+                stream << "alignas(16) ";
+                break;
+            case DeclModID::MUTABLE:
+                stream << "mutable ";
+                break;
+            default: break;
+        }
         member_decl_stmt->emit(ctx, stream);
         stream << "\n";
     }

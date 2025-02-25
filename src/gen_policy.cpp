@@ -106,6 +106,17 @@ GenPolicy::GenPolicy() {
     arr_kind_distr.emplace_back(Probability<ArrKindID>(ArrKindID::DYN_CLASS_MBR, 5));
     shuffleProbProxy(arr_kind_distr);
 
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::NORMAL, 40));
+//    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::VOLATILE, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::STATIC, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::THREAD_LOCAL, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::ALIGNAS_8, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::ALIGNAS_16, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::CONST, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::CONSTEXPR, 2));
+    decl_mod_distr.emplace_back(Probability<DeclModID>(DeclModID::MUTABLE, 2));
+    shuffleProbProxy(decl_mod_distr);
+
     min_inp_vars_num = 20;
     max_inp_vars_num = 60;
 

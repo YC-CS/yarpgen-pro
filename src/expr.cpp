@@ -2593,6 +2593,8 @@ AssignmentExpr::create(std::shared_ptr<PopulateCtx> ctx) {
 
     if ((out_kind == DataKind::VAR || ctx->getLoopDepth() == 0)) {
         auto new_var = ScalarVar::create(ctx);
+        if (new_var->getDeclMod() == DeclModID::CONST || new_var->getDeclMod() == DeclModID::CONSTEXPR)
+            new_var->setDeclMod(DeclModID::NORMAL);
         ctx->getExtOutSymTable()->addVar(new_var);
         auto new_scalar_use_expr = std::make_shared<ScalarVarUseExpr>(new_var);
         new_scalar_use_expr->setIsDead(false);
