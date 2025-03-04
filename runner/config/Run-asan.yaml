@@ -20,4 +20,4 @@ extra_option :
   - "-fsanitize=address"
 
 march:
-  - "-march=skx"
+  - "-march=native"

@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--compile-only", action="store_true", help="only compile, won't execute")
 
 # 传入 YAML 路径
-parser.add_argument('yaml_file', type=str, help='Path to the YAML file')
+parser.add_argument('yaml_file', type=str, help='Path to the YAML file', nargs='?', default='default.yaml')
 
 args = parser.parse_args()
 

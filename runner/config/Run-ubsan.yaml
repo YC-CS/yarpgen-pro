@@ -2,7 +2,7 @@ language : "cpp"
 generator_path : "/home/yc/workspace/projects/yarpgen-pro/build/yarpgen"
 testing_path : "/home/yc/workspace/Testing/"
 timeout : 60
-run_count : 10000
+run_count : 1000
 
 compiler :
   - "g++"
@@ -17,7 +17,7 @@ optimization :
   - "-Ofast"
 
 extra_option :
-  - "-std=c++14"
+  - "-fsanitize=undefined"
 
 march:
-  - "-march=skx"
+  - "-march=native"

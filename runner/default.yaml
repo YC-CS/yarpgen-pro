@@ -1,0 +1,23 @@
+language : "cpp"
+generator_path : "/home/workspace/yarpgen-pro/build/yarpgen"
+testing_path : "/home/workspace/Testing/"
+timeout : 60
+run_count : 100
+
+compiler :
+  - "g++"
+  - "clang++"
+
+optimization :
+  - "-O0"
+  - "-O1"
+  - "-Os"
+  - "-O2"
+  - "-O3"
+  - "-Ofast"
+
+extra_option :
+  - "-std=c++14"
+
+march:
+  - "-march=native"
