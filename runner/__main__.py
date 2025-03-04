@@ -29,6 +29,9 @@ run_count = config.get('run_count')
 
 
 TIME_STR = get_current_time_str()
+
+if not TEST_PATH.endswith('/'):
+    TEST_PATH += '/'
 TEST_FOLDER = TEST_PATH + 'Testing-' + TIME_STR + '/'
 
 GENERATOR_OUTPUT_FOLDER = TEST_FOLDER + 'cases/'
